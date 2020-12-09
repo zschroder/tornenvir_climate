@@ -226,5 +226,75 @@ yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "bla
 ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
 ```
 
+#########################
+## Climate Change Data ##
+#########################
+
+
+*Environment Data [NARR]*
+
+*Nino 3.4*
+
+*Global Mean Temperature*
+
+*Sea Surface Temperatures*
+
+Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
+
+```{r}
+library(raster)
+ncpath <- "~/Desktop/Projects/Dissertation_OutbreakClimatology/"
+ncname <- "air.mon.anom"  
+ncfname <- paste(ncpath, ncname, ".nc", sep="")
+
+tmp_raster <- brick(ncfname, varname="air")
+class(tmp_raster)
+
+
+Month1994to2020 <- seq(1369,1688, 1)
+
+January1994 <- subset(tmp_raster, 1369)
+as.data.frame(January1994) #-- > must cut it to the extent of the US
+
+September2020 <- subset(tmp_raster, 1688)
+```
+
+```{r, eval = FALSE}
+for(i in Month1994to2020){
+  print(i)
+  #if year = 1994 and month = 1 then you want subset(tmp_raster, 1369)
+  CAPE <- raster(rb, layer = 375)
+}
+```
+
+Sea Surface Temperatures: 
+
+YOu need to switch this to the western Caribbeann. Check ElsnerWiden2014
+```{r}
+#download.file(url = "https://www.cpc.ncep.noaa.gov/data/indices/sstoi.atl.indices",
+#              destfile = "ATL_SST.csv", mode = "wb")  
+              #https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=30&lat2=60&lon1=300&lon2=340&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries
+download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=5&lat2=20&lon1=300&lon2=330+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries" ,
+              destfile = "Atlantic_SST.csv", mode = "wb") 
+```
+
+
+Nino 3.4 
+https://psl.noaa.gov/data/correlation/nina34.data
+
+#Teleconnection Indices 
+```{r}
+download.file(url = "ftp://ftp.cpc.ncep.noaa.gov/wd52dg/data/indices/tele_index.nh",
+              destfile = "tele.csv", mode = "wb")
+
+
+download.file(url = "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/nino34.long.data",
+              destfile = "Nino3_4.csv", mode = "wb")
+```
+
+Arctic sea ice
+```{r, eval = FALSE}
+#https://nsidc.org/data/NSIDC-0051/versions/1
+```
 
 
