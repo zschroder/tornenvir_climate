@@ -32,6 +32,10 @@ suppressMessages(library(lubridate))
 suppressMessages(library(zoo))
 ```
 
+```{r}
+merc =  "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+```
+
 Create the unique ID for the `All_Tornadoes` file that will match the ID column in `BigDays.sfdfT`. 
 ```{r}
 All_Tornadoes<- All_Tornadoes %>%
@@ -61,18 +65,166 @@ BigDays.sfdfT <- BigDays.sfdfT %>%
 dim(BigDays.sfdfT)
 ```
 
-*Environment Data [NARR]*
-
-*Nino 3.4*
-
-*Global Mean Temperature*
-
-*Sea Surface Temperatures*
-
 ##########################
 ## Preliminary Analysis ##
 ##########################
 
+
+```{r}
+timeseries_env <- BigDays.sfdfT %>%
+  group_by(Year) %>%
+  summarize(yravgCAPE = mean(maxCAPE),
+            yravgCIN = mean(minCIN),
+            yravgDLBS = mean(maxBS_deep),
+            yravgSLBS = mean(maxBS_shallow))
+
+anom_CAPE = mean(timeseries_env$yravgCAPE)
+anom_CIN = mean(timeseries_env$yravgCIN)
+anom_DLBS = mean(timeseries_env$yravgDLBS)
+anom_SLBS = mean(timeseries_env$yravgSLBS)
+
+timeseries_env <- timeseries_env %>%
+  mutate(anomCAPE = yravgCAPE - anom_CAPE,
+         anomCIN = yravgCIN - anom_CIN,
+         anomDLBS = yravgDLBS - anom_DLBS,
+         anomSLBS = yravgSLBS - anom_SLBS,
+         posCAPE = anomCAPE >= 0,
+         posCIN = anomCIN >= 0,
+         posDLBS = anomDLBS >= 0,
+         posSLBS = anomSLBS >= 0)
+```
+
+## Plot the figures for the yearly average extreme value for CAPE, CIN, DLBS, and SLBS. 
+
+Graph of yearly average maximum CAPE.
+```{r, eval = FALSE}
+yearCAPEgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgCAPE))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme CAPE (in Clusters)")
+
+yearCAPEgraph <- yearCAPEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearCAPEgraph
+```
+
+Graph of yearly average minimum CIN.
+```{r, eval = FALSE}
+yearCINgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgCIN))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(-175, -50), breaks = c(seq(-175,-50,25))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme CIN (in Clusters)")
+
+yearCINgraph <- yearCINgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearCINgraph
+```
+
+Graph of yearly average maximum DLBS.
+```{r, eval = FALSE}
+yearDLBSgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgDLBS))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(22, 34), breaks = c(seq(22,34,2))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme DLBS (in Clusters)")
+
+yearDLBSgraph <- yearDLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearDLBSgraph
+```
+
+Graph of yearly average maximum SLBS.
+```{r, eval = FALSE}
+yearSLBSgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgSLBS))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(10, 20), breaks = c(seq(10,20,2))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme SLBS (in Clusters)")
+
+yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearSLBSgraph
+```
+
+Graph of yearly anomaly of maximum CAPE.
+```{r}
+yearCAPEgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCAPE)) +
+  geom_bar(stat = "identity", aes(fill = posCAPE)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_CAPE, digits = 2), paste0('J/kg')), x = 1998, y = -600) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme CAPE (in Clusters)")
+
+yearCAPEgraph <- yearCAPEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of minimum CIN.
+```{r}
+yearCINgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCIN)) +
+  geom_bar(stat = "identity", aes(fill = posCIN)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+    geom_label(label = paste("Average:", round(anom_CIN, digits = 2), paste0('J/kg')), x = 1998, y = -50) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme CIN (in Clusters)")
+
+yearCINgraph <- yearCINgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of maximum DLBS.
+```{r}
+
+yearDLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomDLBS)) +
+  geom_bar(stat = "identity", aes(fill = posDLBS)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_DLBS, digits = 2), paste0('m/s')), x = 1998, y = 3) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme DLBS (in Clusters)")
+
+yearDLBSgraph <- yearDLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of maximum SLBS.
+```{r}
+yearSLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomSLBS)) +
+  geom_bar(stat = "identity", aes(fill = posSLBS)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_SLBS, digits = 2), paste0('m/s')), x = 1998, y = 3.15) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme SLBS (in Clusters)")
+
+yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+```{r}
+#library(ggpubr)
+ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
+```
 
 
 
