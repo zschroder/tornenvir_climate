@@ -6,9 +6,72 @@ output: html_document
 ---
 
 
+*Load the package libraries needed for this research: *
+```{r}
+suppressMessages(library(dplyr))
+suppressMessages(library(sf))
+suppressMessages(library(USAboundaries))
+suppressMessages(library(tmap))
+suppressMessages(library(ggplot2))
+suppressMessages(library(lme4))
+#devtools::install_github("paul-buerkner/brms")
+suppressMessages(library(brms))
+#devtools::install_github("rmcelreath/rethinking")
+suppressMessages(library(rethinking)) 
+suppressMessages(library(tidybayes))
+#devtools::install_github("mvuorre/brmstools")
+suppressMessages(library(brmstools)) 
+suppressMessages(library(bayesplot))
+suppressMessages(library(ggpubr))
+suppressMessages(library(hexbin))
+suppressMessages(library(ggstance))
+suppressMessages(library(modelr))
+suppressMessages(library(xtable))
+suppressMessages(library(sp))
+suppressMessages(library(lubridate))
+suppressMessages(library(zoo))
+```
 
+Create the unique ID for the `All_Tornadoes` file that will match the ID column in `BigDays.sfdfT`. 
+```{r}
+All_Tornadoes<- All_Tornadoes %>%
+   mutate(ID = paste0(gsub("-", "", cDate), groupNumber))
+```
 
+##################
+## Introduction ##
+##################
 
+##########
+## Data ##
+##########
+
+*Tornado Data*
+
+I load the data. The data file (BigDays.RData) comes from the DefineBigDays repository on github. (https://github.com/zschroder/DefineBigDays). I copy the BigDays.RData file from the DefineBigDays repository and add it to this project. This can be updated yearly by adding the latest tornado csv file from the Storm Prediction Center. Additionally, we can define an outbreak as an arbitrary number of tornadoes.
+```{r}
+load("BigDays.RData")
+```
+
+Add tornado rate and tornado density to the `BigDays.sfdfT` data frame. 
+```{r}
+BigDays.sfdfT <- BigDays.sfdfT %>%
+  mutate(TorPerHour = nT/as.numeric(Duration) * 3600,
+         TorPerKm = nT/as.numeric(HullArea) * 10^6)
+dim(BigDays.sfdfT)
+```
+
+*Environment Data [NARR]*
+
+*Nino 3.4*
+
+*Global Mean Temperature*
+
+*Sea Surface Temperatures*
+
+##########################
+## Preliminary Analysis ##
+##########################
 
 
 
