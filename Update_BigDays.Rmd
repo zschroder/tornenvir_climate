@@ -7,3 +7,64 @@ output: html_document
 
 The data for the BigDays needs to be updated. Currently it only contains information from 1994 to 2018. This needs to be extended to 2020. As such, additional NARR data and climate data will need to be downloaded and added to the `RData` file. This work will closely follow that outlined in the **DefineBigDays** repository on my github page. 
 
+The 1950 to 2018 tornado data is downloaded as a csv file from https://www.spc.noaa.gov/wcm/#data
+
+The 2019 through September 2020 data came from the SPC National Center for Environmental Information Storm Events Database (https://www.ncdc.noaa.gov/stormevents/choosedates.jsp?statefips=-999%2CALL). 
+
+*Load the necessary packages*
+
+```{r}
+library(sp)
+library(sf)
+library(lubridate)
+library(dplyr)
+```
+
+
+Use the start lon/lat and create a `sp` object then convert to `sf`. Set the coordinate reference system (crs) to ESPG 4326.
+```{r}
+Torn.spdf <- read.csv(file = "1950-2019_all_tornadoes.csv")
+sp::coordinates(Torn.spdf) <- ~ slon + slat
+Torn.sfdf <- st_as_sf(Torn.spdf)
+st_crs(Torn.sfdf) <- 4326
+```
+
+In the 2020 data, we can also use the start lat and lon to creat an `sp` object. We then can convert it to `sf` data frame and set the coordinate reference system (crs) to EPSG 4326 [WGS 84]. However, we need to adjust the column headers of the 2019 and 2020 tornado files to match those of the 1950 to 2018 data frame. 
+
+```{r}
+cols <- c("eventid", "county", "city", "date", "time", "eventtype", "mag_NA", "mag", "fat", "inj", "loss", "closs", "st", "tz", "magtype", "epiid", "cztype", "stf", "WFO", "injind", "fatind", "source", "floodcause", "len", "wid", "brange", "bazimuth", "erange", "eazimuth", "elocation", "slat", "slon", "elat", "elon", "eventnar", "episodenar", "om")
+```
+
+
+Read the 2020 tornado data into R. Change the column names using the `colnames` function. Convert to a spatial points data frame using the start latitude and longitude for each tornado. Next, convert to a simple features data frame with a set coordinate reference system to the WGS 84 (EPSG: 4236)
+
+```{r}
+Torn2020.spdf <-read.csv(file = "2020_TornadoData.csv")
+colnames(Torn2020.spdf) <- cols
+sp::coordinates(Torn2020.spdf) <- ~ slon + slat
+Torn2020.sfdf <- st_as_sf(Torn2020.spdf)
+st_crs(Torn2020.sfdf) <- 4326
+```
+
+Adjust the date and time columns. Add columns for day (dy), month (mo), year (yr), time(CST) 
+
+```{r}
+mydates <- as.Date(c(Torn2020.sfdf$date), format = "%m/%d/%Y")
+
+year <- rep(2020, 1131)
+daysnum <- day(mydates)
+monthnum <- month(mydates)
+
+test <-  Torn2020.sfdf %>%
+  mutate(yr = rep(2020, 1131),
+         dy = day(as.Date(c(date), format = "%m/%d/%Y")),
+         mo = month(as.Date(c(date), format = "%m/%d/%Y")))
+```
+
+
+We need to combine the 2019, 2020 and 1950 to 2018 data frames. However, the column headers do not match. The first thing to do is correct this issue. 
+
+```{r}
+columns <- colnames(Torn.sfdf)
+```
+
