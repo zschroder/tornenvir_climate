@@ -290,11 +290,46 @@ BigDays.sfdfT$StartTime_UTC <- force_tz(BigDays.sfdfT$StartTime_UTC, tzone = "UT
 BigDays.sfdfT$NARRtime <- (align.time(BigDays.sfdfT$StartTime_UTC, n = (60 * 60 * 3)) - 3600 * 3)
 ```
 
-
 Split the NARR date and time into their individual variables. Then bind the columns for BigDays.sfdfT. NOTE: cannot do a mutate because 00Z produces NAs. DON'T USE!
 ```{r, eval = FALSE}
 NARRday = format(as.POSIXct(strptime(BigDays.sfdfT$NARRtime,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%Y/%m/%d")
 NARRZtime = format(as.POSIXct(strptime(BigDays.sfdfT$NARRtime,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%H")
 
 BigDays.sfdfT <- cbind(BigDays.sfdfT, NARRday, NARRZtime)
+```
+
+Create a downloadable string of information for the varying NARR times. 
+```{r, eval = FALSE}
+BigDays.sfdfT <- BigDays.sfdfT %>%
+  mutate(YrMoDa = gsub("/", "", NARRday),
+         slug = paste0("merged_AWIP32.",YrMoDa, NARRZtime),
+         slug2 = paste0("merged_AWIP32.",YrMoDa))
+```
+
+Extract a vector of the big days. Save as a .csv for NARR download. 
+```{r, eval = FALSE}
+bigdays <- BigDays.sfdfT$NARRday
+bigdaytimes <- BigDays.sfdfT$NARRZtime
+x <- cbind(as.character(bigdays), as.character(bigdaytimes))
+write.csv(x, "BigDays.csv")
+```
+
+```{r, eval = FALSE}
+BigDays.sfdfT <- st_transform(BigDays.sfdfT, 
+  crs = st_crs(US_LCC))
+```
+
+Obtain the group day hulls. Transform the CRS to match that of the environmental data raster grids.
+```{r, eval = FALSE}
+BigDays.sfdfT <- st_convex_hull(BigDays.sfdfT)
+BigDays.sfdfT$HullArea <- st_area(BigDays.sfdfT)
+BigDays.sfdfT <- st_transform(BigDays.sfdfT, 
+  crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+Get the centroid (central point of the tornado activity) for each big day. 
+```{r, eval = FALSE}
+BigDayCentroids.df <- st_centroid(BigDays.sfdfT)
+BigDayCentroids.df$groupArea <- st_area(st_convex_hull(BigDays.sfdfT))
+BigDayCentroids.df$groupDensity <- BigDayCentroids.df$nT/BigDayCentroids.df$groupArea
 ```
