@@ -69,21 +69,39 @@ Torn2020.sfdf <-  Torn2020.sfdf %>%
 Convert times to the CST time zone. In the originaltime column, it has values of CST-6, EST-5, MST-7, and PST-8. Therefore, we create a `for` loop to convert these times to CST which is consistent with `Torn50_19.sfdf`.
 ```{r}
 time <- c()
+date <- c()
+
+#Torn2020.sfdf$date <- as.Date(Torn2020.sfdf$date, format = "%m/%d/%Y")
 
 for (i in 1:1131){
   if(Torn2020.sfdf$timezone[i] == "CST-6") { 
     time <- append(time,Torn2020.sfdf$originaltime[i])
-    } else if
-    (Torn2020.sfdf$timezone[i] == "EST-5") {
-    time <- append(time,(Torn2020.sfdf$originaltime[i] - 100))  
+    date <- append(date, as.Date(Torn2020.sfdf$date[i]))
+    } else if(Torn2020.sfdf$timezone[i] == "EST-5") {
+    o_time <- ifelse((Torn2020.sfdf$originaltime[i] <= 100), (Torn2020.sfdf$originaltime[i] +1200-100), Torn2020.sfdf$originaltime[i] - 100)
+    newdate <- if(Torn2020.sfdf$originaltime[i] <= 100) {as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y", origin = "0020/01/01")-1 } else { as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y")
+    }
+    date <- append(date, newdate)
+    time <- append(time, (o_time))  
     }   else if(Torn2020.sfdf$timezone[i] == "MST-7") {
-    time <- append(time,(Torn2020.sfdf$originaltime[i] + 100))
+    o_time <- ifelse((Torn2020.sfdf$originaltime[i] >= 2300), (Torn2020.sfdf$originaltime[i]  - 2300), Torn2020.sfdf$originaltime[i] +100)
+    newdate <- if(Torn2020.sfdf$originaltime[i] >= 2300) {as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y", origin = "0020/01/01")+1 } else { as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y")
+    }
+    time <- append(time, Torn2020.sfdf$originaltime[i])
+    date <- append(date, as.Date(Torn2020.sfdf$date[i])) 
     }    else if(Torn2020.sfdf$timezone[i] == "PST-8") {
-    time <- append(time,(Torn2020.sfdf$originaltime[i] + 200))
+          o_time <- ifelse((Torn2020.sfdf$originaltime[i] >= 2200), (Torn2020.sfdf$originaltime[i]  - 2200), Torn2020.sfdf$originaltime[i] +200)
+    newdate <- if(Torn2020.sfdf$originaltime[i] >= 2200) {as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y", origin = "0020/01/01")+1 } else { as.Date(Torn2020.sfdf$date[i], format = "%m/%d/%Y")
+      }
+    time <- append(time,(Torn2020.sfdf$originaltime[i]))
+    date <- append(date, as.Date(Torn2020.sfdf$date[i]))
     } else ("NA")
 }
 
-time <- format(strptime(substr(as.POSIXct(sprintf("%04.0f", time), format="%H%M"), 12, 16), '%H:%M'), '%I:%M:%S %p')
+install.packages("chron")
+library(chron)
+time <- chron(times=time)
+time <- format(strptime(substr(as.POSIXct(sprintf("%04.0f", time), format="%H%M%S"), 12, 16), '%H:%M:%S'), '%I:%M:%S %p')
 time <- format(strptime(time, "%I:%M:%S %p"), "%H:%M:%S")
 
 x<-as.POSIXct(time,format="%H:%M:%S")
@@ -104,7 +122,7 @@ colnames(Torn2020.sfdf)
 
 Filter the column names in the `Torn50_19.sfdf` and `Torn2020.sfdf`. 
 ```{r}
-filter_cols <- c("om","yr", "mo", "dy", "date", "tz", "st", "stf", "mag","inj", "fat", "loss", "closs", "elat", "elon", "len", "wid", "geometry")
+filter_cols <- c("om","yr", "mo", "dy", "date", "time", "tz", "st", "stf", "mag","inj", "fat", "loss", "closs", "elat", "elon", "len", "wid", "geometry")
 
 Torn50_19.sfdf <-  Torn50_19.sfdf %>%
   dplyr::select(filter_cols)
@@ -182,9 +200,9 @@ time <- All_Tornadoes$DateTime
 
 Next compute pairwise Euclidean distances in space and, separately, in time using the `dist()` function. Divide the spatial distance by 15 so that the values are commensurate with the time 'distance' based on the assumption of 15 meters per second (~34 mph) for an average speed of tornado-generating storms. Compare: Distance from New York to Denver is 2.622 x 10^6 meters. There are 3.154 x 10^7 seconds in a year. This will capture the historic multiday tornado outbreaks. For analysis we want to consider each day in the multiday group separately. As the value of the divisor increases cluster areas get larger. Remove `ds` and `dt` to free memory. Distances are saved as an object of class `dist` containing a vector of length N * (N-1)/2, which is the number of unique point pairs.
 ```{r}
-ds <- (dist(space) / 15) + dist(time)
-#dt <- dist(time)
-#dst <- ds + dt
+ds <- (dist(space) / 15)
+dt <- dist(time)
+dst <- ds + dt
 rm(ds, dt)
 ```
 
@@ -286,6 +304,7 @@ sum(BigDays.sfdfT$nT)
 
 Round the UTC time to nearest 6 hours. This is done with the `align.time()` function from the **xts** package. Adjust it by 3 hours to get the closest time. This falls within the outbreak so you need to subtract by 3 hours (10800 seconds). This will produce the closest 3 hour NARR time that occurs before and not within the big day. 
 ```{r}
+library(xts)
 BigDays.sfdfT$StartTime_UTC <- force_tz(BigDays.sfdfT$StartTime_UTC, tzone = "UTC")
 BigDays.sfdfT$NARRtime <- (align.time(BigDays.sfdfT$StartTime_UTC, n = (60 * 60 * 3)) - 3600 * 3)
 ```
