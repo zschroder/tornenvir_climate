@@ -20,6 +20,7 @@ suppressMessages(library(lubridate))
 suppressMessages(library(dplyr))
 #install.packages("chron")
 suppressMessages(library(chron))
+suppressMessages(library(raster))
 ```
 
 Projections you may need: 
@@ -413,7 +414,7 @@ maxSM <- numeric()
 maxLCL <- numeric()
 minLCL <- numeric()
  
-for(i in 743:length(slug)){
+for(i in 1:length(slug)){
   print(i)
   rb <- brick(paste0("/Volumes/Zoe's Home/NCARNARR/All/", BigDays.sfdfT$slug2[i], "/",BigDays.sfdfT$slug[i])) #<-- this is for varying NARR times
   CAPE <- raster(rb, layer = 375)
