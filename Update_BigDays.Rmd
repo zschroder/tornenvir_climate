@@ -38,11 +38,24 @@ WGS84 <- 4326
 
 Use the start lon/lat and create a `sp` object then convert to `sf`. Set the coordinate reference system (crs) to ESPG 4326.
 ```{r}
-Torn50_19.spdf <- read.csv(file = "1950-2019_all_tornadoes.csv")
+Torn50_19.spdf <- read.csv(file = "1950-2019_actual_tornadoes.csv")
 sp::coordinates(Torn50_19.spdf) <- ~ slon + slat
 Torn50_19.sfdf <- st_as_sf(Torn50_19.spdf)
 st_crs(Torn50_19.sfdf) <- WGS84
 ```
+
+```{r}
+#Torn50_18.spdf <- read.csv(file = "1950-2018_actual_tornadoes.csv")
+#sp::coordinates(Torn50_18.spdf) <- ~ slon + slat
+#Torn50_18.sfdf <- st_as_sf(Torn50_18.spdf)
+#st_crs(Torn50_18.sfdf) <- WGS84
+```
+
+```{r}
+#timecheck <- Torn50_19.sfdf %>%
+#  filter(date == Torn50_18.sfdf$date && (Torn50_19.sfdf$time %in% Torn50_18.sfdf$time))
+```
+
 
 In the 2020 data, we can also use the start lat and lon to creat an `sp` object. We then can convert it to `sf` data frame and set the coordinate reference system (crs) to EPSG 4326 [WGS 84]. However, we need to adjust the column headers of the 2020 tornado files to match those of the 1950 to 2019 data frame. 
 
@@ -660,3 +673,27 @@ save(BigDays.sfdfT, All_Tornadoes, BigDayTornadoes, file = "BigDays.RData")
 #load("BigDays.RData")
 dim(BigDays.sfdfT)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+old_dates <- c(old$cDate)
+
+X <- new %>%
+  filter(subset(new, !(cDate %in% old$cDate))
+```
+
