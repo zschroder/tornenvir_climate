@@ -636,32 +636,32 @@ Population Data for 2000 through 2015 are obtained from the Gridded Population o
 Load the population raster(s) and crop to defined extent. 
 ```{r}
 #1995 Data: 
-  rb <- raster("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens/usadens/usads95g/w001001.adf")
+  rb <- raster("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens/usadens/usads95g/w001001.adf")
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens1995 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2000 Data: 
-  rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens", "/gpw-v4-population-density-rev11_2000_2pt5_min_tif/gpw_v4_population_density_rev11_2000_2pt5_min.tif"))
+  rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2000_2pt5_min_tif/gpw_v4_population_density_rev11_2000_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2000 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2005 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens", "/gpw-v4-population-density-rev11_2005_2pt5_min_tif/gpw_v4_population_density_rev11_2005_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2005_2pt5_min_tif/gpw_v4_population_density_rev11_2005_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2005 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2010 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens", "/gpw-v4-population-density-rev11_2010_2pt5_min_tif/gpw_v4_population_density_rev11_2010_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2010_2pt5_min_tif/gpw_v4_population_density_rev11_2010_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2010 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2015 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens", "/gpw-v4-population-density-rev11_2015_2pt5_min_tif/gpw_v4_population_density_rev11_2015_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2015_2pt5_min_tif/gpw_v4_population_density_rev11_2015_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2015 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2020 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/tornenvir_climatePopDens", "/gpw-v4-population-density-rev11_2020_2pt5_min_tif/gpw_v4_population_density_rev11_2020_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2020_2pt5_min_tif/gpw_v4_population_density_rev11_2020_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2015 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
@@ -745,29 +745,13 @@ for(i in 1:dim(BigDays.sfdfT)[1]){
 BigDays.sfdfT <- cbind(BigDays.sfdfT, totalPOP)
 ```
 
+Save the data.
 ```{r, eval = FALSE}
-tester <- BigDays.sfdfT[1,]
-
-BigDays.sfdfT <- BigDays.sfdfT %>%
-  mutate(STPLCL = ifelse(minLCL <= 1000, 1, ifelse(minLCL >= 2000, 0, minLCL)),
-         STPBWD = ifelse(maxBS >= 30, 1.5, ifelse(maxBS < 12.5, 0, maxBS)), 
-         STPCIN = ifelse(minCIN >= -50, 1, ifelse(minCIN <= -200, 0, minCIN)))
-
-STP <- ((BigDays.sfdfT$maxsbCAPE)/1500) * 
-       ((2000 - BigDays.sfdfT$STPLCL)/1000) * 
-       ((BigDays.sfdfT$maxHLCY)/150) * 
-       ((BigDays.sfdfT$STPBWD)/20) * 
-       ((200 + BigDays.sfdfT$STPCIN)/150)
-
-sum(is.na(BigDays.sfdfT$minLCL))
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
 
-Save the data. 
-```{r, eval=FALSE}
-save(BigDays.sfdfT, All_Tornadoes, BigDayTornadoes, file = "BigDays.RData")
-#load("BigDays.RData")
-dim(BigDays.sfdfT)
-```
+Tornado Data has been updated. 
 
 
 
