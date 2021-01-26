@@ -481,6 +481,96 @@ for(i in 1:length(slug)){
 }
 ```
 
+If you need to run your NARR data code in multiple sections, you can combine them using the chunk below. 
+```{r, eval = FALSE}
+avgCAPE811 <- avgCAPE
+avgsbCAPE811 <- avgsbCAPE 
+avgDEW811 <-  avgDEW 
+avgMR811 <-  avgMR 
+avgHLCY811 <- avgHLCY 
+avgCIN811 <- avgCIN
+avgsbCIN811 <-  avgsbCIN
+avgUSTM811 <-  avgUSTM
+avgVSTM811 <-  avgVSTM 
+avgBS_deep811 <-  avgBS_deep
+avgBS_shallow811 <- avgBS_shallow
+avgSM811 <- avgSM
+avgRATIO811 <-  avgRATIO
+avgLCL811 <-  avgLCL
+maxCAPE811 <-  maxCAPE
+maxsbCAPE811 <-  maxsbCAPE
+maxDEW811 <-  maxDEW 
+maxMR811 <-  maxMR 
+maxHLCY811 <-   maxHLCY
+minCIN811 <-  minCIN
+minsbCIN811 <-  minsbCIN 
+maxUSTM811 <-  maxUSTM 
+maxVSTM811 <-  maxVSTM 
+maxBS_deep811 <-  maxBS_deep
+maxBS_shallow811 <-  maxBS_shallow
+maxSM811 <-  maxSM
+maxLCL811 <-  maxLCL
+minLCL811 <-  minLCL
+
+avgCAPE830 <- avgCAPE
+avgsbCAPE830 <- avgsbCAPE 
+avgDEW830 <-  avgDEW 
+avgMR830 <-  avgMR 
+avgHLCY830 <- avgHLCY 
+avgCIN830 <- avgCIN
+avgsbCIN830 <-  avgsbCIN
+avgUSTM830 <-  avgUSTM
+avgVSTM830 <-  avgVSTM 
+avgBS_deep830 <-  avgBS_deep
+avgBS_shallow830 <- avgBS_shallow
+avgSM830 <- avgSM
+avgRATIO830 <-  avgRATIO
+avgLCL830 <-  avgLCL
+maxCAPE830 <-  maxCAPE
+maxsbCAPE830 <-  maxsbCAPE
+maxDEW830 <-  maxDEW 
+maxMR830 <-  maxMR 
+maxHLCY830 <-   maxHLCY
+minCIN830 <-  minCIN
+minsbCIN830 <-  minsbCIN 
+maxUSTM830 <-  maxUSTM 
+maxVSTM830 <-  maxVSTM 
+maxBS_deep830 <-  maxBS_deep
+maxBS_shallow830 <-  maxBS_shallow
+maxSM830 <-  maxSM
+maxLCL830 <-  maxLCL
+minLCL830 <-  minLCL
+
+avgCAPE <- append(avgCAPE811, avgCAPE830) 
+avgsbCAPE<- append(avgsbCAPE811, avgsbCAPE830) 
+avgDEW<- append(avgDEW811, avgDEW830) 
+avgMR<- append(avgMR811, avgMR830) 
+avgHLCY<- append(avgHLCY811, avgHLCY830) 
+avgCIN<- append(avgCIN811, avgCIN830) 
+avgsbCIN<- append(avgsbCIN811, avgsbCIN830) 
+avgUSTM<- append(avgUSTM811, avgUSTM830) 
+avgVSTM<- append(avgVSTM811, avgVSTM830) 
+avgBS_deep<- append(avgBS_deep811, avgBS_deep830) 
+avgBS_shallow<- append(avgBS_shallow811, avgBS_shallow830) 
+avgSM<- append(avgSM811, avgSM830) 
+avgRATIO<- append(avgRATIO811, avgRATIO830) 
+avgLCL<- append(avgLCL811, avgLCL830) 
+maxCAPE<- append(maxCAPE811, maxCAPE830) 
+maxsbCAPE<- append(maxsbCAPE811, maxsbCAPE830) 
+maxDEW<- append(maxDEW811, maxDEW830) 
+maxMR<- append(maxMR811, maxMR830) 
+maxHLCY<- append(maxHLCY811, maxHLCY830) 
+minCIN<- append(minCIN811, minCIN830) 
+minsbCIN<- append(minsbCIN811, minsbCIN830) 
+maxUSTM<- append(maxUSTM811, maxUSTM830) 
+maxVSTM<- append(maxVSTM811, maxCAPE830) 
+maxBS_deep<- append(maxBS_deep811, maxBS_deep830) 
+maxBS_shallow<- append(maxBS_shallow811, maxBS_shallow830) 
+maxSM<- append(maxSM811, maxSM830) 
+maxLCL<- append(maxLCL811, maxLCL830) 
+minLCL<- append(minLCL811, minLCL830)
+```
+
 Add environmental data values to the group day means data frame.
 ```{r}
 BigDays.sfdfT$avgCAPE <- avgCAPE
@@ -513,6 +603,11 @@ BigDays.sfdfT$maxLCL <- maxLCL
 BigDays.sfdfT$avgLCL <- avgLCL
 ```
 
+Update the BigDays.RData file. Create a back up version. 
+```{r, eval = FALSE}
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
+```
 ########################
 ## Population Density ##
 ########################
@@ -541,32 +636,32 @@ Population Data for 2000 through 2015 are obtained from the Gridded Population o
 Load the population raster(s) and crop to defined extent. 
 ```{r}
 #1995 Data: 
-  rb <- raster("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens/usadens/usads95g/w001001.adf")
+  rb <- raster("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens/usadens/usads95g/w001001.adf")
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens1995 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2000 Data: 
-  rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens", "/gpw-v4-population-density-rev11_2000_2pt5_min_tif/gpw_v4_population_density_rev11_2000_2pt5_min.tif"))
+  rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2000_2pt5_min_tif/gpw_v4_population_density_rev11_2000_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2000 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2005 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens", "/gpw-v4-population-density-rev11_2005_2pt5_min_tif/gpw_v4_population_density_rev11_2005_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2005_2pt5_min_tif/gpw_v4_population_density_rev11_2005_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2005 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2010 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens", "/gpw-v4-population-density-rev11_2010_2pt5_min_tif/gpw_v4_population_density_rev11_2010_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2010_2pt5_min_tif/gpw_v4_population_density_rev11_2010_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2010 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2015 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens", "/gpw-v4-population-density-rev11_2015_2pt5_min_tif/gpw_v4_population_density_rev11_2015_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2015_2pt5_min_tif/gpw_v4_population_density_rev11_2015_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2015 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 #2020 Data: 
-    rb <- raster(paste0("/Volumes/Zoe's Home/PhD_Program/Projects/PopDens", "/gpw-v4-population-density-rev11_2020_2pt5_min_tif/gpw_v4_population_density_rev11_2020_2pt5_min.tif"))
+    rb <- raster(paste0("/Users/zoeschroder/Desktop/Projects/tornenvir_climate/PopDens", "/gpw-v4-population-density-rev11_2020_2pt5_min_tif/gpw_v4_population_density_rev11_2020_2pt5_min.tif"))
   ext = raster::extent(c(-125, -67, 24, 50))
   PopDens = crop(rb, ext)
   PopDens2015 = projectRaster(PopDens, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
@@ -650,29 +745,13 @@ for(i in 1:dim(BigDays.sfdfT)[1]){
 BigDays.sfdfT <- cbind(BigDays.sfdfT, totalPOP)
 ```
 
+Save the data.
 ```{r, eval = FALSE}
-tester <- BigDays.sfdfT[1,]
-
-BigDays.sfdfT <- BigDays.sfdfT %>%
-  mutate(STPLCL = ifelse(minLCL <= 1000, 1, ifelse(minLCL >= 2000, 0, minLCL)),
-         STPBWD = ifelse(maxBS >= 30, 1.5, ifelse(maxBS < 12.5, 0, maxBS)), 
-         STPCIN = ifelse(minCIN >= -50, 1, ifelse(minCIN <= -200, 0, minCIN)))
-
-STP <- ((BigDays.sfdfT$maxsbCAPE)/1500) * 
-       ((2000 - BigDays.sfdfT$STPLCL)/1000) * 
-       ((BigDays.sfdfT$maxHLCY)/150) * 
-       ((BigDays.sfdfT$STPBWD)/20) * 
-       ((200 + BigDays.sfdfT$STPCIN)/150)
-
-sum(is.na(BigDays.sfdfT$minLCL))
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
 
-Save the data. 
-```{r, eval=FALSE}
-save(BigDays.sfdfT, All_Tornadoes, BigDayTornadoes, file = "BigDays.RData")
-#load("BigDays.RData")
-dim(BigDays.sfdfT)
-```
+Tornado Data has been updated. 
 
 
 
