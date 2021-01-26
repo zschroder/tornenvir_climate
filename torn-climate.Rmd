@@ -33,6 +33,11 @@ suppressMessages(library(zoo))
 ```
 
 ```{r}
+load("BigDays.RData")
+```
+
+
+```{r}
 merc =  "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
 ```
 
@@ -54,7 +59,7 @@ All_Tornadoes<- All_Tornadoes %>%
 
 I load the data. The data file (BigDays.RData) comes from the DefineBigDays repository on github. (https://github.com/zschroder/DefineBigDays). I copy the BigDays.RData file from the DefineBigDays repository and add it to this project. This can be updated yearly by adding the latest tornado csv file from the Storm Prediction Center. Additionally, we can define an outbreak as an arbitrary number of tornadoes.
 ```{r}
-load("BigDays.RData")
+#load("BigDays.RData")
 ```
 
 Add tornado rate and tornado density to the `BigDays.sfdfT` data frame. 
@@ -162,6 +167,10 @@ yearSLBSgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgSLBS))) +
 yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 
 yearSLBSgraph
+```
+```{r}
+#library(ggpubr)
+ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
 ```
 
 Graph of yearly anomaly of maximum CAPE.
