@@ -3,6 +3,8 @@ title: "Update_BigDays"
 author: "Zoe Schroder"
 date: "12/9/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 The data for the BigDays needs to be updated. Currently it only contains information from 1994 to 2018. This needs to be extended to 2020. As such, additional NARR data and climate data will need to be downloaded and added to the `RData` file. This work will closely follow that outlined in the **DefineBigDays** repository on my github page. 
@@ -754,6 +756,118 @@ Save the data.
 Tornado Data has been updated. 
 
 
+Climate Data: 
+
+Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
+
+```{r}
+library(raster)
+ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
+ncname <- "air.mon.anom"  
+ncfname <- paste(ncpath, ncname, ".nc", sep="")
+library(ncdf4)
+tmp_raster <- raster::brick(ncfname, varname="air")
+class(tmp_raster)
+
+January1994 <- subset(tmp_raster, 1369)
+plot(January1994)
+
+```
+
+```{r}
+#devtools::install_github("wmurphyrd/fiftystater")
+library(fiftystater)
+
+sf_fifty <- sf::st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+  group_by(id, piece) %>% 
+  summarize(do_union=FALSE) %>%
+  st_cast("POLYGON") %>% 
+  ungroup()
+
+plot(sf_fifty["id"])
+
+sf_fifty <- sf::st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+  group_by(id, piece) %>% 
+  summarize(do_union = FALSE) %>%
+  st_cast("POLYGON") %>% 
+  ungroup()
+
+ggplot() +
+  theme_minimal() +
+  geom_sf(data = sf_fifty)
+```
+
+```{r}
+BigDays.sfdfT <- st_transform(BigDays.sfdfT, CRS("+proj=longlat +datum=WGS84"))
+
+extent(BigDays.sfdfT)
+
+#How do you set extent boundaries? Is it easier to manually set them? 
+
+January1994 <- rotate(January1994)
+```
+
+extent(BigDays.sfdfT)
+class      : Extent 
+xmin       : -116.93 
+xmax       : -70.57 
+ymin       : 24.9879 
+ymax       : 49 
+
+January1994
+class      : RasterLayer 
+dimensions : 36, 72, 2592  (nrow, ncol, ncell)
+resolution : 5, 5  (x, y)
+extent     : -180, 180, -90, 90  (xmin, xmax, ymin, ymax)
+crs        : +proj=longlat +datum=WGS84 +no_defs 
+source     : memory
+names      : X1994.01.01 
+values     : -8.546114, 5.79  (min, max)
+z-value    : 1994-01-01 
+
+
+```{r}
+Jan94 <- crop(January1994, extent(BigDays.sfdfT))
+Jan94_extent<- mask(Jan94, BigDays.sfdfT)
+plot(Jan94_extent)
+```
+
+```{r}
+tm_shape(Jan94_extent) +
+  tm_raster(title = "") +
+  tm_format(title = expression(paste("CAPE [J ", kg^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.1, 0.1, .1, .18), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.28, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+  #tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 1, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() 
+```
+
+
+
+
+
+
+
+
+
+At least you could plot the data. 
+```{r}
+Jan1994.sfdf <- as.data.frame(January1994, row.names=NULL, optional=TRUE, xy=TRUE, 
+             na.rm=TRUE, long=TRUE)
+sp::coordinates(Jan1994.sfdf) <- ~ x + y
+Help <- st_as_sf(Jan1994.sfdf)
+
+st_crs(Help) <- "+proj=utm +zone=15 +datum=NAD83 +units=m +no_defs" 
+
+```
+
+
+
 
 
 
@@ -770,9 +884,33 @@ Tornado Data has been updated.
 
 
 ```{r}
-old_dates <- c(old$cDate)
+BigDays.sfdfT <- st_transform(BigDays.sfdfT, CRS("+proj=longlat +datum=WGS84"))
 
-X <- new %>%
-  filter(subset(new, !(cDate %in% old$cDate))
+
+
+
+
+
+Jan1994.sfdf <- st_as_sf(as.data.frame(Jan94_extent, row.names=NULL, optional=FALSE, xy=TRUE, na.rm=TRUE, long=TRUE)) #-- > must cut it to the extent of the US
+#colnames(Jan1994.sfdf) <- c("Longitude", "Latitude", "Date", "Anomaly")
+
+
+September2020 <- subset(tmp_raster, 1688)
+plot(September2020)
+```
+
+Month1994to2020 <- seq(1369,1688, 1)
+test<- rep(1369:1688, 12)
+
+```{r, eval = FALSE}
+jan1994 <- subset(tmp_raster, 1369)
+feb94 <- subset(tmp_raster, 1370)
+
+for(i in Month1994to2020){
+  print(i) 
+raster_i
+  #if year = 1994 and month = 1 then you want subset(tmp_raster, 1369)
+  CAPE <- raster(rb, layer = 375)
+}
 ```
 
