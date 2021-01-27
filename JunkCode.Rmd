@@ -1,0 +1,29 @@
+---
+title: "Junk Code"
+output: html_document
+---
+```{r}
+#devtools::install_github("wmurphyrd/fiftystater")
+library(fiftystater)
+
+sf_fifty <- sf::st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+  group_by(id, piece) %>% 
+  summarize(do_union=FALSE) %>%
+  st_cast("POLYGON") %>% 
+  ungroup()
+
+plot(sf_fifty["id"])
+
+sf_fifty <- sf::st_as_sf(fifty_states, coords = c("long", "lat")) %>% 
+  group_by(id, piece) %>% 
+  summarize(do_union = FALSE) %>%
+  st_cast("POLYGON") %>% 
+  ungroup()
+```
+
+```{r}
+library(ggplot2)
+ggplot() +
+  theme_minimal() +
+  geom_sf(data = sf_fifty)
+```
