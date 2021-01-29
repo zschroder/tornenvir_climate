@@ -14,7 +14,6 @@ The 1950 to 2018 tornado data is downloaded as a csv file from https://www.spc.n
 The 2019 through September 2020 data came from the SPC National Center for Environmental Information Storm Events Database (https://www.ncdc.noaa.gov/stormevents/choosedates.jsp?statefips=-999%2CALL). 
 
 *Load the necessary packages*
-
 ```{r}
 suppressMessages(library(sp))
 suppressMessages(library(sf))
@@ -34,14 +33,13 @@ merc <- "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units
 US_LCC <- "+proj=lcc +lat_1=33 +lat_2=45 +lat_0=39 +lon_0=-96 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m no_defs"
 ```
 
-
 Coordinate Reference Systems you may need:
 ```{r, eval = FALSE}
 WGS84 <- 4326
 ```
 
 
-Use the start lon/lat and create a `sp` object then convert to `sf`. Set the coordinate reference system (crs) to ESPG 4326.
+Use the start lon/lat and create a `sp` object then convert to `sf`. Set the coordinate reference system (crs) to ESPG to `WGS84`.
 ```{r, eval = FALSE}
 Torn50_19.spdf <- read.csv(file = "1950-2019_actual_tornadoes.csv")
 sp::coordinates(Torn50_19.spdf) <- ~ slon + slat
@@ -61,8 +59,7 @@ st_crs(Torn50_19.sfdf) <- WGS84
 #  filter(date == Torn50_18.sfdf$date && (Torn50_19.sfdf$time %in% Torn50_18.sfdf$time))
 ```
 
-
-In the 2020 data, we can also use the start lat and lon to creat an `sp` object. We then can convert it to `sf` data frame and set the coordinate reference system (crs) to EPSG 4326 [WGS 84]. However, we need to adjust the column headers of the 2020 tornado files to match those of the 1950 to 2019 data frame. 
+In the 2020 data, we can also use the start lat and lon to create an `sp` object. We then can convert it to `sf` data frame and set the coordinate reference system (crs) to EPSG 4326 [WGS 84]. However, we need to adjust the column headers of the 2020 tornado files to match those of the 1950 to 2019 data frame. 
 
 Read the 2020 tornado data into R.
 ```{r, eval = FALSE}
@@ -140,12 +137,13 @@ Determine the column names in the `Torn50_19.sfdf`.
 ```{r, eval = FALSE}
 colnames(Torn50_19.sfdf)
 ```
+
 Determine the column names in the `Torn2020.sfdf`. 
 ```{r, eval = FALSE}
 colnames(Torn2020.sfdf)
 ```
 
-Filter the column names in the `Torn50_19.sfdf` and `Torn2020.sfdf`. 
+Filter the column names in the `Torn50_19.sfdf` and `Torn2020.sfdf`. You want both data frames to have the same columns.  
 ```{r, eval = FALSE}
 filter_cols <- c("om","yr", "mo", "dy", "date", "time", "tz", "st", "stf", "mag","inj", "fat", "loss", "closs", "elat", "elon", "len", "wid", "geometry")
 
@@ -378,6 +376,7 @@ BigDayCentroids.df$groupArea <- st_area(st_convex_hull(BigDays.sfdfT))
 BigDayCentroids.df$groupDensity <- BigDayCentroids.df$nT/BigDayCentroids.df$groupArea
 ```
 
+Save the necessary data frames. 
 ```{r, eval = FALSE}
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
 ```
@@ -764,15 +763,15 @@ Save the data.
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
 
-Tornado Data has been updated. 
-
+##################################
+##Tornado Data has been updated.## 
+##################################
 
 Climate Data: 
 
 ```{r}
 load("BigDays.RData")
 ```
-
 
 Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
 
@@ -790,6 +789,7 @@ plot(January1994)
 
 ```
 
+Transform the BigDays.sfdfT to the same projection as the raster data. Check the extent of BigDays.sfdfT to ensure the geometry is in degrees latitude and longitude. Rotate the `January1994` raster to get longitude in -180 to 180 degrees longitude (currently 0 to 360 degrees longitude).
 ```{r}
 BigDays.sfdfT <- st_transform(BigDays.sfdfT, CRS("+proj=longlat +datum=WGS84"))
 
@@ -825,7 +825,6 @@ USextent <- as(raster::extent(-130, -65, 25, 49), "SpatialPolygons") %>%
 ```
 
 Crop the January 1994 data to the extent of the United States. 
-
 ```{r}
 Jan94 <- crop(January1994, extent(USextent))
 Jan94_extent <- mask(Jan94, USextent)
@@ -856,5 +855,28 @@ tm_shape(Jan94_extent,
   tm_scale_bar(width = 0.3, size = 1, position = c("right", "top"), color.dark = "gray70") +
 tm_shape(stateBorders, midpoint = NA) +
   tm_borders() 
+```
+
+
+
+
+
+
+```{r}
+test<- BigDays.sfdfT %>%
+  filter(Year == 1994 & Mo %in% c(3,4))
+```
+
+```{r}
+for (i in test) {
+  Year_add <- (test$Year[i] - min(test$Year)) * 12
+  Month_add <- test$Mo[i]
+  total <- Year_add + Month_add
+  ras <- subset(tmp_raster, 1369 + total)
+  ras <- rotate(ras)
+  ras <- crop(ras, extent(USextent))
+  ras <- mask(ras, USextent)
+  plot(ras)
+}
 ```
 
