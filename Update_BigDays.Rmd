@@ -775,6 +775,10 @@ load("BigDays.RData")
 
 Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
 
+In climate change studies, temperature anomalies are more important than absolute temperature. A temperature anomaly is the difference from an average, or baseline, temperature. The baseline temperature is typically computed by averaging 30 or more years of temperature data. A positive anomaly indicates the observed temperature was warmer than the baseline, while a negative anomaly indicates the observed temperature was cooler than the baseline. When calculating an average of absolute temperatures, things like station location or elevation will have an effect on the data (ex. higher elevations tend to be cooler than lower elevations and urban areas tend to be warmer than rural areas). However, when looking at anomalies, those factors are less critical. For example, a summer month over an area may be cooler than average, both at a mountain top and in a nearby valley, but the absolute temperatures will be quite different at the two locations.
+
+Using anomalies also helps minimize problems when stations are added, removed, or missing from the monitoring network. The above diagram shows absolute temperatures (lines) for five neighboring stations, with the 2008 anomalies as symbols. Notice how all of the anomalies fit into a tiny range when compared to the absolute temperatures. Even if one station were removed from the record, the average anomaly would not change significantly, but the overall average temperature could change significantly depending on which station dropped out of the record. For example, if the coolest station (Mt. Mitchell) were removed from the record, the average absolute temperature would become significantly warmer. However, because its anomaly is similar to the neighboring stations, the average anomaly would change much less.
+
 ```{r}
 library(raster)
 ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
@@ -868,15 +872,133 @@ test<- BigDays.sfdfT %>%
 ```
 
 ```{r}
-for (i in test) {
-  Year_add <- (test$Year[i] - min(test$Year)) * 12
-  Month_add <- test$Mo[i]
+min_airtemp <- numeric()
+avg_airtemp <- numeric()
+max_airtemp <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  Year_add <- (BigDays.sfdfT$Year[i] - min(BigDays.sfdfT$Year)) * 12
+  Month_add <- BigDays.sfdfT$Mo[i]
   total <- Year_add + Month_add
-  ras <- subset(tmp_raster, 1369 + total)
+  val <- (1369 + total)
+  ras <- subset(tmp_raster, val)
   ras <- rotate(ras)
   ras <- crop(ras, extent(USextent))
   ras <- mask(ras, USextent)
-  plot(ras)
+  min_airtemp <- c(min_airtemp, min(getValues(ras)))
+  avg_airtemp <- c(avg_airtemp, mean(getValues(ras)))
+  max_airtemp <- c(max_airtemp, max(getValues(ras)))
 }
 ```
+
+```{r}
+BigDays.sfdfT$min_airtemp <- min_airtemp
+BigDays.sfdfT$max_airtemp <- max_airtemp
+BigDays.sfdfT$avg_airtemp <- avg_airtemp
+```
+
+Save the data.
+```{r, eval = FALSE}
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
+```
+
+
+## Sea Surface Temperatures ##
+
+
+PROSPECTUS: 15$^{\circ}$N to 25$^{\circ}$N and 70$^{\circ}$W to 90$^{\circ}$W
+
+Sea surface temperatures for the western Caribbean. Latitude Range used: 20.0 to 4.8; Longitude Range used: 300.0 to 330.0
+```{r}
+#download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=15&lat2=25&lon1=270&lon2=290+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries" ,
+              #destfile = "Atlantic_SST.csv", mode = "wb")
+
+Atl_SST <- read.csv(file = "Atlantic_SST.csv")
+
+```
+
+Get the sea surface temperature for each big day. 
+```{r}
+Atlantic_SST <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  month_column = as.numeric(BigDays.sfdfT$Month[i]) + 1
+  year_row = BigDays.sfdfT$Year[i] - 1994
+  Atlantic_SST <- c(Atlantic_SST, Atl_SST[47+ year_row, month_column]) #47 is year 1994 in the Atlantic_SST data frame
+}  
+```
+
+Add sea surface temperatures to the BigDays.sfdfT file. 
+```{r}
+BigDays.sfdfT$Atlantic_SST <- Atlantic_SST
+```
+
+## Nino 3.4 ##
+-99.99							
+NINA34							
+5N-5S 17	0W-120W						
+HadISST							
+https://	psl.noaa	.gov/g	cos_wgsp	/Timeser	ies/Nino	34/	
+
+PROSPECTUS: 120$^{\circ}$W to 170$^{\circ}$W and 5$^{\circ}$N to 5$^{\circ}$S.
+
+```{r}
+download.file(url = "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/nino34.long.data",
+              destfile = "Nino3_4.csv", mode = "wb")
+
+NINO <- read.csv(file = "Nino3_4.csv")
+```
+
+```{r}
+ElNino34 <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  month_column = as.numeric(BigDays.sfdfT$Month[i]) + 1
+  year_row = BigDays.sfdfT$Year[i] - 1994
+  ElNino34 <- c(ElNino34, NINO[125+ year_row, month_column]) #125 is year 1994 in the NINO data frame
+}  
+```
+
+Add El Nino 3.4 data to the BigDays.sfdfT file. 
+```{r}
+BigDays.sfdfT$ElNino34 <- ElNino34
+```
+
+
+Arctic Sea Ice
+
+Comes from the Sea Ice Index, Sea Ice Concentrations from Nimbus-7 SMMR SSMIS and DMSP SSM/I Passive Microwave Data is the input data that the Sea Ice Index is derived from. Extent and Area are in millions of square kilometers. N 90 to 30.98 E: 180 to -180 https://nsidc.org/data/g02135?qt-data_set_tabs=2#qt-data_set_tabs
+
+```{r}
+seaice <- read.csv(file = "SIE.csv")
+```
+
+```{r}
+SIE <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  month_column = as.numeric(BigDays.sfdfT$Month[i]) * 2 + 2
+  year_row = BigDays.sfdfT$Year[i] - 1994
+  SIE <- c(SIE, seaice[16+ year_row, month_column]) #125 is year 1994 in the NINO data frame
+}  
+```
+
+Add Sea Ice Extent to the BigDays.sfdfT file. 
+```{r}
+BigDays.sfdfT$SIE<- SIE
+```
+
+Save the data.
+```{r, eval = FALSE}
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
+```
+
+
+
 
