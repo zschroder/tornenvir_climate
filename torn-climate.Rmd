@@ -3,80 +3,57 @@ title: "Influence of climate indicators on tornado 'outbreak' environments"
 author: "Zoe Schroder"
 date: "5/1/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
+**Make sure to answer these questions in the Introduction: **
+Tornadoes will become more destructive in a warmer world. 
+    1. How do you know this?
+    2. Why is this important?
+    3. How does this influence your research?
+    
+Environmental factors have been linked to individual climate change factors including....
+    1. Cite the important literature
+    2. How is what you are doing different?
+    3. Why is this perspective so important? 
 
-*Load the package libraries needed for this research: *
-```{r}
-suppressMessages(library(dplyr))
-suppressMessages(library(sf))
-suppressMessages(library(USAboundaries))
-suppressMessages(library(tmap))
-suppressMessages(library(ggplot2))
-suppressMessages(library(lme4))
-#devtools::install_github("paul-buerkner/brms")
-suppressMessages(library(brms))
-#devtools::install_github("rmcelreath/rethinking")
-suppressMessages(library(rethinking)) 
-suppressMessages(library(tidybayes))
-#devtools::install_github("mvuorre/brmstools")
-suppressMessages(library(brmstools)) 
-suppressMessages(library(bayesplot))
-suppressMessages(library(ggpubr))
-suppressMessages(library(hexbin))
-suppressMessages(library(ggstance))
-suppressMessages(library(modelr))
-suppressMessages(library(xtable))
-suppressMessages(library(sp))
-suppressMessages(library(lubridate))
-suppressMessages(library(zoo))
-```
+##Introduction: ##
+    
+Tornado outbreaks are becoming more extensive and destructive on average. Tornado days are declining annually; however, more tornadoes are occurring on these days \citep{ElsnerElsnerJagger2015, TippettEtAl2016, Moore2017, TippettCohen2016, Moore2018, MooreDeBoer2019}. \cite{SchroderElsner2019} use statistical models to quantify the role environmental conditions play in the variability of tornado outbreak characteristics, including accumulated tornado power (ATP), tornado counts, and casualties. Research suggests that ATP and tornado counts is increasing per annum \citep{SchroderElsner2019, ElsnerFrickerSchroder2018}. As a result, the risk for damage increases  \citep{ElsnerMurnaneJaggerWiden2013}. It is challenging to attribute shifts in tornado outbreak characteristics to climate change due to limited understanding between climate change and tornado outbreak environments \citep{ElsnerGuishard2014, ElsnerFrickerSchroder2018}
+
+Researchers project severe convective weather to increase in the future due to more frequent environmental conditions \citep{DelGenioYaoJonas2007, TrappEtAl2007, HoogewindBaldwinTrapp2017, SeeleyRomps2015, DiffenbaughTrappBrooks2008, Brooks2013, SeeleyandRomps2015}. Environmental conditions include a combination of temperature and wind driven factors. CAPE and CIN are temperature-driven factors that are inversely related and represent the ability for air to rise in the atmosphere. CAPE and CIN are projected to increase due to rising surface temperatures \citep{ElsnerJaggerElsner2014, DelGenioYaoJonas2007, HoogewindBaldwinTrapp2017, Brooks2013, TrappEtAl2007, ElsnerFrickerSchroder2018}. BS and SRH are both wind-driven factors. BS represents the change in wind speed and direction over different depths of the atmosphere. BS is projected to decrease due to a limited temperature gradient between the equator and the poles \citep{Brooks2013, DiffenbaughTrappBrooks2008}. SRH represents the rotation within the storm and is projected to increase \citep{TippettEtAl2016}.  Research suggests that the decrease in bulk shear will be less than the projected increase in CAPE \citep{DelGenioYaoJonas2007, TrappEtAl2007, Brooks2013, HoogewindBaldwinTrapp2017}. As a result, favorable severe weather environments are expected to be more frequent \citep{DelGenioYaoJonas2007, TrappEtAl2007, Brooks2013, HoogewindBaldwinTrapp2017}. Researchers suggest shift in environmental factors as a result of climate change, but more work is needed to quantify and explain these potential changes. 
+
+Limited research has been done to link climate change to tornado outbreak environments and associated characteristics. The studies that have been done do not match the scale of the outbreak. Researchers have analyzed climate change's role on severe convective weather at the storm level \citep{TrappandHoogewind2018, HoogewindBaldwinTrapp2017,DelGenioYaoJonas2007, DiffenbaughTrappBrooks2008}. Climate change is a larger scale phenomenon and should be considered with large scale physical processes such as tornado outbreaks. More work is needed to quantify how outbreak-level  environmental conditions are responding to climate change and influencing tornado outbreak characteristics (i.e., cluster severity, tornado counts, and casualty counts). 
+
+The goal of this research is to quantify and explain the relationship between environmental conditions and climate change. We use the term cluster instead of outbreak because we do not associate the tornadoes with the synoptic setup. The objective is to understand the role of climate change on tornado cluster environments and how that change is affecting the climatology of tornado clusters. We will fit statistical models to predict tornado cluster environments using climate change factors, including sea ice extent, El Nino Southern Oscillation Index, global temperature anomalies, and western Caribbean sea surface temperatures. 
 
 ```{r}
 load("BigDays.RData")
 ```
 
-
+**Set the mercator projection for all figures**
 ```{r}
 merc =  "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+WGS84 <- 4326
 ```
 
-Create the unique ID for the `All_Tornadoes` file that will match the ID column in `BigDays.sfdfT`. 
 ```{r}
-All_Tornadoes<- All_Tornadoes %>%
-   mutate(ID = paste0(gsub("-", "", cDate), groupNumber))
+st_crs(BigDays.sfdfT) <- WGS84
 ```
-
-##################
-## Introduction ##
-##################
-
-##########
-## Data ##
-##########
-
-*Tornado Data*
-
-I load the data. The data file (BigDays.RData) comes from the DefineBigDays repository on github. (https://github.com/zschroder/DefineBigDays). I copy the BigDays.RData file from the DefineBigDays repository and add it to this project. This can be updated yearly by adding the latest tornado csv file from the Storm Prediction Center. Additionally, we can define an outbreak as an arbitrary number of tornadoes.
-```{r}
-#load("BigDays.RData")
-```
-
-Add tornado rate and tornado density to the `BigDays.sfdfT` data frame. 
-```{r}
-BigDays.sfdfT <- BigDays.sfdfT %>%
-  mutate(TorPerHour = nT/as.numeric(Duration) * 3600,
-         TorPerKm = nT/as.numeric(HullArea) * 10^6)
-dim(BigDays.sfdfT)
-```
-
-##########################
-## Preliminary Analysis ##
-##########################
 
 
 ```{r}
-timeseries_env <- BigDays.sfdfT %>%
+library(ggplot2)
+library(dplyr)
+library(ggpubr)
+library(sf)
+```
+
+Compute the yearly averages and yearly anomalies. 
+```{r}
+
+timeseries_env <- as.data.frame(BigDays.sfdfT) %>%
   group_by(Year) %>%
   summarize(yravgCAPE = mean(maxCAPE),
             yravgCIN = mean(minCIN),
@@ -99,8 +76,11 @@ timeseries_env <- timeseries_env %>%
          posSLBS = anomSLBS >= 0)
 ```
 
-## Plot the figures for the yearly average extreme value for CAPE, CIN, DLBS, and SLBS. 
+## Preliminary figures of the Environmental Data ##
 
+Plot the figures for the yearly average extreme value for CAPE, CIN, DLBS, and SLBS. 
+
+**Average Extremes of the Environmental Factors**
 Graph of yearly average maximum CAPE.
 ```{r, eval = FALSE}
 yearCAPEgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgCAPE))) +
@@ -168,17 +148,20 @@ yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "bla
 
 yearSLBSgraph
 ```
+
 ```{r}
 #library(ggpubr)
 ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
 ```
+
+**The Anomalies**
 
 Graph of yearly anomaly of maximum CAPE.
 ```{r}
 yearCAPEgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCAPE)) +
   geom_bar(stat = "identity", aes(fill = posCAPE)) +
   scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
   geom_label(label = paste("Average:", round(anom_CAPE, digits = 2), paste0('J/kg')), x = 1998, y = -600) +
   theme_bw() +
   xlab("Year") +
@@ -192,7 +175,7 @@ Graph of yearly anomaly of minimum CIN.
 yearCINgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCIN)) +
   geom_bar(stat = "identity", aes(fill = posCIN)) +
   scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
     geom_label(label = paste("Average:", round(anom_CIN, digits = 2), paste0('J/kg')), x = 1998, y = -50) +
   theme_bw() +
   xlab("Year") +
@@ -207,7 +190,7 @@ Graph of yearly anomaly of maximum DLBS.
 yearDLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomDLBS)) +
   geom_bar(stat = "identity", aes(fill = posDLBS)) +
   scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
   geom_label(label = paste("Average:", round(anom_DLBS, digits = 2), paste0('m/s')), x = 1998, y = 3) +
   theme_bw() +
   xlab("Year") +
@@ -221,7 +204,7 @@ Graph of yearly anomaly of maximum SLBS.
 yearSLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomSLBS)) +
   geom_bar(stat = "identity", aes(fill = posSLBS)) +
   scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
   geom_label(label = paste("Average:", round(anom_SLBS, digits = 2), paste0('m/s')), x = 1998, y = 3.15) +
   theme_bw() +
   xlab("Year") +
@@ -235,75 +218,206 @@ yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "bla
 ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
 ```
 
-#########################
-## Climate Change Data ##
-#########################
-
-
-*Environment Data [NARR]*
-
-*Nino 3.4*
-
-*Global Mean Temperature*
-
-*Sea Surface Temperatures*
-
-Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
+## Preliminary figures of the climate data
 
 ```{r}
-library(raster)
-ncpath <- "~/Desktop/Projects/Dissertation_OutbreakClimatology/"
-ncname <- "air.mon.anom"  
-ncfname <- paste(ncpath, ncname, ".nc", sep="")
+ClimatebyMonth <- BigDays.sfdfT %>%
+  group_by(Mo) %>%
+  summarize(maxtempanom = max(max_airtemp),
+            SST_max = max(Atlantic_SST),
+            ElNino_max  = max(ElNino34),
+            SIE_max = max(SIE))
 
-tmp_raster <- brick(ncfname, varname="air")
-class(tmp_raster)
-
-
-Month1994to2020 <- seq(1369,1688, 1)
-
-January1994 <- subset(tmp_raster, 1369)
-as.data.frame(January1994) #-- > must cut it to the extent of the US
-
-September2020 <- subset(tmp_raster, 1688)
+ClimatebyYear <- BigDays.sfdfT %>%
+  group_by(Mo, Year) %>%
+  summarize(maxtempanom = max(max_airtemp),
+            SST_max = max(Atlantic_SST),
+            ElNino_max  = max(ElNino34),
+            SIE_max = max(SIE))
 ```
 
-```{r, eval = FALSE}
-for(i in Month1994to2020){
-  print(i)
-  #if year = 1994 and month = 1 then you want subset(tmp_raster, 1369)
-  CAPE <- raster(rb, layer = 375)
+
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(maxtempanom ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
 }
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_Temp <- slope_group
+ClimatebyYear$slope_Temp <- slope_vals
 ```
 
-Sea Surface Temperatures: 
-
-YOu need to switch this to the western Caribbeann. Check ElsnerWiden2014
 ```{r}
-#download.file(url = "https://www.cpc.ncep.noaa.gov/data/indices/sstoi.atl.indices",
-#              destfile = "ATL_SST.csv", mode = "wb")  
-              #https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=30&lat2=60&lon1=300&lon2=340&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries
-download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=5&lat2=20&lon1=300&lon2=330+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries" ,
-              destfile = "Atlantic_SST.csv", mode = "wb") 
+month <- month.abb
+
+yearClimatetempgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = maxtempanom))) +
+ geom_smooth(aes(color=group_Temp), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Surface Temperature Anomalies in the U.S.") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearClimatetempgraph <- yearClimatetempgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearClimatetempgraph
 ```
 
 
-Nino 3.4 
-https://psl.noaa.gov/data/correlation/nina34.data
-
-#Teleconnection Indices 
 ```{r}
-download.file(url = "ftp://ftp.cpc.ncep.noaa.gov/wd52dg/data/indices/tele_index.nh",
-              destfile = "tele.csv", mode = "wb")
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(SST_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
 
+slope_group = character()
+slope_vals = numeric()
 
-download.file(url = "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/nino34.long.data",
-              destfile = "Nino3_4.csv", mode = "wb")
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_SST <- slope_group
+ClimatebyYear$slope_SST <- slope_vals
 ```
 
-Arctic sea ice
-```{r, eval = FALSE}
-#https://nsidc.org/data/NSIDC-0051/versions/1
+```{r}
+month <- month.abb
+
+yearSSTgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = SST_max))) +
+ geom_smooth(aes(color=group_SST), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Positive Trend", "Negative Trend"), values = c('blue', 'red')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum Sea Surface Temperatures in Caribbean [degrees C]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearSSTgraph <- yearSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearSSTgraph
 ```
 
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(ElNino_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
 
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_ElNino <- slope_group
+ClimatebyYear$slope_ElNino <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearElNinograph <- ggplot(ClimatebyYear, (aes(x = Mo, y = ElNino_max))) +
+ geom_smooth(aes(color=group_ElNino), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum El Nino Temperatures [degrees C]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearElNinograph <- yearElNinograph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearElNinograph
+```
+
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(SIE_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0, "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_SIE <- slope_group
+ClimatebyYear$slope_SIE <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearSIEgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = SIE_max))) +
+ geom_smooth(aes(color=group_SIE), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum Arctic Sea Ice Extent [millions of square kilometers]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearSIEgraph <- yearSIEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearSIEgraph
+```
