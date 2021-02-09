@@ -2,6 +2,309 @@
 title: "Junk Code"
 output: html_document
 ---
+
+*Load the package libraries needed for this research: *
+```{r}
+suppressMessages(library(dplyr))
+suppressMessages(library(sf))
+suppressMessages(library(USAboundaries))
+suppressMessages(library(tmap))
+suppressMessages(library(ggplot2))
+suppressMessages(library(lme4))
+#devtools::install_github("paul-buerkner/brms")
+suppressMessages(library(brms))
+#devtools::install_github("rmcelreath/rethinking")
+suppressMessages(library(rethinking)) 
+suppressMessages(library(tidybayes))
+#devtools::install_github("mvuorre/brmstools")
+suppressMessages(library(brmstools)) 
+suppressMessages(library(bayesplot))
+suppressMessages(library(ggpubr))
+suppressMessages(library(hexbin))
+suppressMessages(library(ggstance))
+suppressMessages(library(modelr))
+suppressMessages(library(xtable))
+suppressMessages(library(sp))
+suppressMessages(library(lubridate))
+suppressMessages(library(zoo))
+```
+
+```{r}
+load("BigDays.RData")
+```
+
+
+```{r}
+merc =  "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+```
+
+Create the unique ID for the `All_Tornadoes` file that will match the ID column in `BigDays.sfdfT`. 
+```{r}
+All_Tornadoes<- All_Tornadoes %>%
+   mutate(ID = paste0(gsub("-", "", cDate), groupNumber))
+```
+
+##################
+## Introduction ##
+##################
+
+##########
+## Data ##
+##########
+
+*Tornado Data*
+
+I load the data. The data file (BigDays.RData) comes from the DefineBigDays repository on github. (https://github.com/zschroder/DefineBigDays). I copy the BigDays.RData file from the DefineBigDays repository and add it to this project. This can be updated yearly by adding the latest tornado csv file from the Storm Prediction Center. Additionally, we can define an outbreak as an arbitrary number of tornadoes.
+```{r}
+#load("BigDays.RData")
+```
+
+Add tornado rate and tornado density to the `BigDays.sfdfT` data frame. 
+```{r}
+BigDays.sfdfT <- BigDays.sfdfT %>%
+  mutate(TorPerHour = nT/as.numeric(Duration) * 3600,
+         TorPerKm = nT/as.numeric(HullArea) * 10^6)
+dim(BigDays.sfdfT)
+```
+
+##########################
+## Preliminary Analysis ##
+##########################
+
+
+```{r}
+timeseries_env <- BigDays.sfdfT %>%
+  group_by(Year) %>%
+  summarize(yravgCAPE = mean(maxCAPE),
+            yravgCIN = mean(minCIN),
+            yravgDLBS = mean(maxBS_deep),
+            yravgSLBS = mean(maxBS_shallow))
+
+anom_CAPE = mean(timeseries_env$yravgCAPE)
+anom_CIN = mean(timeseries_env$yravgCIN)
+anom_DLBS = mean(timeseries_env$yravgDLBS)
+anom_SLBS = mean(timeseries_env$yravgSLBS)
+
+timeseries_env <- timeseries_env %>%
+  mutate(anomCAPE = yravgCAPE - anom_CAPE,
+         anomCIN = yravgCIN - anom_CIN,
+         anomDLBS = yravgDLBS - anom_DLBS,
+         anomSLBS = yravgSLBS - anom_SLBS,
+         posCAPE = anomCAPE >= 0,
+         posCIN = anomCIN >= 0,
+         posDLBS = anomDLBS >= 0,
+         posSLBS = anomSLBS >= 0)
+```
+
+## Plot the figures for the yearly average extreme value for CAPE, CIN, DLBS, and SLBS. 
+
+Graph of yearly average maximum CAPE.
+```{r, eval = FALSE}
+yearCAPEgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgCAPE))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme CAPE (in Clusters)")
+
+yearCAPEgraph <- yearCAPEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearCAPEgraph
+```
+
+Graph of yearly average minimum CIN.
+```{r, eval = FALSE}
+yearCINgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgCIN))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(-175, -50), breaks = c(seq(-175,-50,25))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme CIN (in Clusters)")
+
+yearCINgraph <- yearCINgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearCINgraph
+```
+
+Graph of yearly average maximum DLBS.
+```{r, eval = FALSE}
+yearDLBSgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgDLBS))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(22, 34), breaks = c(seq(22,34,2))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme DLBS (in Clusters)")
+
+yearDLBSgraph <- yearDLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearDLBSgraph
+```
+
+Graph of yearly average maximum SLBS.
+```{r, eval = FALSE}
+yearSLBSgraph <- ggplot(timeseries_env, (aes(x = Year, y = yravgSLBS))) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "gray70", size = 1) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  scale_y_continuous(limits = c(10, 20), breaks = c(seq(10,20,2))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Monthly Average of Extreme SLBS (in Clusters)")
+
+yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+
+yearSLBSgraph
+```
+```{r}
+#library(ggpubr)
+ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
+```
+
+Graph of yearly anomaly of maximum CAPE.
+```{r}
+yearCAPEgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCAPE)) +
+  geom_bar(stat = "identity", aes(fill = posCAPE)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_CAPE, digits = 2), paste0('J/kg')), x = 1998, y = -600) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme CAPE (in Clusters)")
+
+yearCAPEgraph <- yearCAPEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of minimum CIN.
+```{r}
+yearCINgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCIN)) +
+  geom_bar(stat = "identity", aes(fill = posCIN)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+    geom_label(label = paste("Average:", round(anom_CIN, digits = 2), paste0('J/kg')), x = 1998, y = -50) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme CIN (in Clusters)")
+
+yearCINgraph <- yearCINgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of maximum DLBS.
+```{r}
+
+yearDLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomDLBS)) +
+  geom_bar(stat = "identity", aes(fill = posDLBS)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_DLBS, digits = 2), paste0('m/s')), x = 1998, y = 3) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme DLBS (in Clusters)")
+
+yearDLBSgraph <- yearDLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+Graph of yearly anomaly of maximum SLBS.
+```{r}
+yearSLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomSLBS)) +
+  geom_bar(stat = "identity", aes(fill = posSLBS)) +
+  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2018,1))) +
+  geom_label(label = paste("Average:", round(anom_SLBS, digits = 2), paste0('m/s')), x = 1998, y = 3.15) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Anomalies of Extreme SLBS (in Clusters)")
+
+yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+```
+
+```{r}
+#library(ggpubr)
+ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
+```
+
+#########################
+## Climate Change Data ##
+#########################
+
+
+*Environment Data [NARR]*
+
+*Nino 3.4*
+
+*Global Mean Temperature*
+
+*Sea Surface Temperatures*
+
+Surface Temperatures from National Oceanic and Atmospheric Association's (NOAA) Global Surface Temperature (NOAAGlobalTemp) data provided by the NOAA/OAR/ESRL PSL (\url{https://psl.noaa.gov/data/gridded/data.noaaglobaltemp.html}). NOAAGlobalTemp is a combination of land and ocean temperatures combined into a singular dataset. The data includes monthly surface temperatures (both land and water) from 1880 to present. It has a spatial resolution of 5$^\circ$ by 5$^\circ$. 
+
+```{r}
+library(raster)
+ncpath <- "~/Desktop/Projects/Dissertation_OutbreakClimatology/"
+ncname <- "air.mon.anom"  
+ncfname <- paste(ncpath, ncname, ".nc", sep="")
+
+tmp_raster <- brick(ncfname, varname="air")
+class(tmp_raster)
+
+
+Month1994to2020 <- seq(1369,1688, 1)
+
+January1994 <- subset(tmp_raster, 1369)
+as.data.frame(January1994) #-- > must cut it to the extent of the US
+
+September2020 <- subset(tmp_raster, 1688)
+```
+
+```{r, eval = FALSE}
+for(i in Month1994to2020){
+  print(i)
+  #if year = 1994 and month = 1 then you want subset(tmp_raster, 1369)
+  CAPE <- raster(rb, layer = 375)
+}
+```
+
+Sea Surface Temperatures: 
+
+YOu need to switch this to the western Caribbeann. Check ElsnerWiden2014
+```{r}
+#download.file(url = "https://www.cpc.ncep.noaa.gov/data/indices/sstoi.atl.indices",
+#              destfile = "ATL_SST.csv", mode = "wb")  
+              #https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=30&lat2=60&lon1=300&lon2=340&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries
+download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=5&lat2=20&lon1=300&lon2=330+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries" ,
+              destfile = "Atlantic_SST.csv", mode = "wb") 
+```
+
+
+Nino 3.4 
+https://psl.noaa.gov/data/correlation/nina34.data
+
+#Teleconnection Indices 
+```{r}
+download.file(url = "ftp://ftp.cpc.ncep.noaa.gov/wd52dg/data/indices/tele_index.nh",
+              destfile = "tele.csv", mode = "wb")
+
+
+download.file(url = "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/nino34.long.data",
+              destfile = "Nino3_4.csv", mode = "wb")
+```
+
+Arctic sea ice
+```{r, eval = FALSE}
+#https://nsidc.org/data/NSIDC-0051/versions/1
+```
+
+
+
 ```{r}
 #devtools::install_github("wmurphyrd/fiftystater")
 library(fiftystater)
