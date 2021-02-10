@@ -48,6 +48,7 @@ library(ggplot2)
 library(dplyr)
 library(ggpubr)
 library(sf)
+library(GGally)
 ```
 
 Compute the yearly averages and yearly anomalies. 
@@ -421,3 +422,18 @@ yearSIEgraph <- yearSIEgraph + theme(axis.title.y = element_text(colour = "black
 
 yearSIEgraph
 ```
+
+## Descriptive Statistics
+
+```{r}
+Climate_dat <- data.frame(AirTemperature = BigDays.sfdfT$avg_airtemp, SST = BigDays.sfdfT$Atlantic_SST, ArcticSIE = BigDays.sfdfT$SIE, ElNino = BigDays.sfdfT$ElNino34)
+ggpairs(Climate_dat)
+cor(Climate_dat)
+```
+
+```{r}
+Env_dat <- data.frame(CAPE = BigDays.sfdfT$maxCAPE, CIN = BigDays.sfdfT$minCIN, HLCY = BigDays.sfdfT$maxHLCY, DEW = BigDays.sfdfT$maxDEW, DeepBS = BigDays.sfdfT$maxBS_deep, ShallowBS = BigDays.sfdfT$maxBS_shallow)
+ggpairs(Env_dat)
+cor(Env_dat)
+```
+
