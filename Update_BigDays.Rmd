@@ -919,6 +919,7 @@ Atl_SST <- read.csv(file = "Atlantic_SST.csv")
 
 ```
 
+
 Get the sea surface temperature for each big day. 
 ```{r}
 Atlantic_SST <- numeric()
@@ -934,6 +935,31 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 Add sea surface temperatures to the BigDays.sfdfT file. 
 ```{r}
 BigDays.sfdfT$Atlantic_SST <- Atlantic_SST
+```
+
+##Alaska SST 
+60.0 to 50.5 N and 133.1 to 157.5 W
+```{r}
+download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=50.36&lat2=59.95&lon1=133.08&lon2=156.66+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries", destfile = "Alaska_SST.csv", mode = "wb")
+
+Alaska_SST <- read.csv(file = "Alaska_SST.csv")
+```
+
+Get the sea surface temperature for each big day. 
+```{r}
+GAK_SST <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  month_column = as.numeric(BigDays.sfdfT$Month[i]) + 1
+  year_row = BigDays.sfdfT$Year[i] - 1994
+  GAK_SST <- c(GAK_SST, Alaska_SST[47+ year_row, month_column]) #47 is year 1994 in the Atlantic_SST data frame when removing header
+}  
+```
+
+Add sea surface temperatures to the BigDays.sfdfT file. 
+```{r}
+BigDays.sfdfT$GAK_SST <- GAK_SST
 ```
 
 ## Nino 3.4 ##
