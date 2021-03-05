@@ -794,7 +794,7 @@ plot(January1994)
 ```
 
 Transform the BigDays.sfdfT to the same projection as the raster data. Check the extent of BigDays.sfdfT to ensure the geometry is in degrees latitude and longitude. Rotate the `January1994` raster to get longitude in -180 to 180 degrees longitude (currently 0 to 360 degrees longitude).
-```{r}
+```{r,eval = FALSE}
 BigDays.sfdfT <- st_transform(BigDays.sfdfT, CRS("+proj=longlat +datum=WGS84"))
 
 extent(BigDays.sfdfT)
@@ -823,13 +823,13 @@ z-value    : 1994-01-01
 #How do you set extent boundaries? Is it easier to manually set them? 
 Create a spatial extent for the entire contiguous United States. You do this by creating a Spatial Polygons data frame then converting to an sf object. 
 
-```{r}
+```{r,eval = FALSE}
 USextent <- as(raster::extent(-130, -65, 25, 49), "SpatialPolygons") %>%
   st_as_sf()
 ```
 
 Crop the January 1994 data to the extent of the United States. 
-```{r}
+```{r,eval = FALSE}
 Jan94 <- crop(January1994, extent(USextent))
 Jan94_extent <- mask(Jan94, USextent)
 
@@ -837,7 +837,7 @@ plot(Jan94_extent)
 ```
 
 Plot a map of the January 1994 air temperature data over the contiguous United States. 
-```{r}
+```{r,eval = FALSE}
 library(tmap)
 tm_shape(Jan94_extent, 
          projection = merc, 
@@ -883,12 +883,12 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   total <- Year_add + Month_add
   val <- (1369 + total)
   ras <- subset(tmp_raster, val)
-  ras <- rotate(ras)
-  ras <- crop(ras, extent(USextent))
-  ras <- mask(ras, USextent)
-  min_airtemp <- c(min_airtemp, min(getValues(ras)))
-  avg_airtemp <- c(avg_airtemp, mean(getValues(ras)))
-  max_airtemp <- c(max_airtemp, max(getValues(ras)))
+  #ras <- rotate(ras)
+ # ras <- crop(ras, extent(USextent))
+ # ras <- mask(ras, USextent)
+  min_airtemp <- c(min_airtemp, min(getValues(ras), na.rm = TRUE))
+  avg_airtemp <- c(avg_airtemp, mean(getValues(ras), na.rm = TRUE))
+  max_airtemp <- c(max_airtemp, max(getValues(ras), na.rm = TRUE))
 }
 ```
 
@@ -896,6 +896,10 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 BigDays.sfdfT$min_airtemp <- min_airtemp
 BigDays.sfdfT$max_airtemp <- max_airtemp
 BigDays.sfdfT$avg_airtemp <- avg_airtemp
+
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'min_airtemp'] <- 'min_globalairtemp'
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'avg_airtemp'] <- 'avg_globalairtemp'
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'max_airtemp'] <- 'max_globalairtemp'
 ```
 
 Save the data.
@@ -935,7 +939,9 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 Add sea surface temperatures to the BigDays.sfdfT file. 
 ```{r}
 BigDays.sfdfT$Atlantic_SST <- Atlantic_SST
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'Atlantic_SST'] <- 'monthlyATLSST'
 ```
+
 
 ##Alaska SST 
 60.0 to 50.5 N and 133.1 to 157.5 W
@@ -960,6 +966,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 Add sea surface temperatures to the BigDays.sfdfT file. 
 ```{r}
 BigDays.sfdfT$GAK_SST <- GAK_SST
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'GAK_SST'] <- 'monthlyGAKSST'
 ```
 
 ## Nino 3.4 ##
@@ -992,6 +999,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 Add El Nino 3.4 data to the BigDays.sfdfT file. 
 ```{r}
 BigDays.sfdfT$ElNino34 <- ElNino34
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'ElNino34'] <- 'monthlyElNino34'
 ```
 
 
@@ -1004,6 +1012,7 @@ seaice <- read.csv(file = "SIE.csv")
 ```
 
 ```{r}
+
 SIE <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1017,14 +1026,347 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 Add Sea Ice Extent to the BigDays.sfdfT file. 
 ```{r}
 BigDays.sfdfT$SIE<- SIE
+
+names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'SIE'] <- 'monthlySIE'
 ```
 
 Save the data.
-```{r, eval = FALSE}
+```{r}
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
 
+##Daily Data: 
+NAO:
+The index is calculated with the easiest method which is the difference in the atmospheric pressure of a meteorological station near the Azores (Lisbon and Ponta Delgada or or Gibraltar, etc.) and a station near the depression of Iceland (Reykjavik and Akureyri or Stykkisholmur, etc.) The positive NAO phase represents a stronger than usual difference in pressure between the two regions. Winds from the west dominate, bringing with them warm air, while the position of the jet stream enables stronger and more frequent storms to travel across the Atlantic.
+
+https://psl.noaa.gov/data/timeseries/daily/NAO/
+Calculation Method: The indices are based on centers-of-action of 500mb height patterns. These time series utilize the NCEP/NCAR R1 dataset. The area averaged region 55-70N;70W-10W is subtracted from 35-45N; 70W-10W. The 1981-2010 period was used as climatology. Before computing these indices the 500mb height fields are spectrally truncated to total wavenumber 10 in order to emphasize large-scale aspects of the teleconnections.
 
 
+```{r}
+
+#download.file(url = "ftp://ftp.cdc.noaa.gov/Public/map/teleconnections/nao.reanalysis.t10trunc.1948-present.txt" ,
+#              destfile = "DailyNAO.csv", mode = "wb")
+
+NAO_daily<- read.csv("DailyNAO.csv")
+colnames(NAO_daily) = c("Year", "Mo", "Day", "Value")
+
+max(NAO_daily$Value)
+
+NAO_daily$StandardizedNAO <- NAO_daily$Value/100
+
+NAO_daily <- NAO_daily %>%
+  filter(Year >= 1994 & Year <= 2021)
+
+NAO_daily$Date <- as.Date(with(NAO_daily, paste(Year, Mo, Day, sep="-")), "%Y-%m-%d")
+```
+
+```{r}
+NAO_dailyvals <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  row = NAO_daily %>%
+    filter(Date == BigDays.sfdfT$cDate[i])
+    NAO_dailyvals <- c(NAO_dailyvals, row$StandardizedNAO)
+}
+
+BigDays.sfdfT$NAO_daily <- NAO_dailyvals
+```
+
+
+```{r}
+NAO_10day <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  rownum = which(NAO_daily$Date == BigDays.sfdfT$cDate[i])
+  startrow = rownum-10
+  dat <- NAO_daily[startrow:rownum,]
+  NAO_10day <- c(NAO_10day, mean(dat$StandardizedNAO))
+} 
+
+BigDays.sfdfT$NAO_10day <- NAO_10day
+
+```
+
+MJO: 
+
+```{r}
+#download.file(url = "http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt" ,
+#              destfile = "DailyMJO.csv", mode = "wb")
+MJO_daily<- read.csv("DailyMJO.csv")
+MJO_daily <- MJO_daily %>%
+  filter(Year >= 1994 & Year <= 2021)
+
+MJO_daily$Date <- as.Date(with(MJO_daily, paste(year, month, day, sep="-")), "%Y-%m-%d")
+```
+
+```{r}
+MJO_dailyvals <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  row = MJO_daily %>%
+    filter(Date == BigDays.sfdfT$cDate[i])
+    MJO_dailyvals <- c(MJO_dailyvals, row$phase)
+}
+
+BigDays.sfdfT$MJO_daily <- MJO_dailyvals
+```
+
+
+```{r}
+MJO_10day <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
+  startrow = rownum-10
+  dat <- MJO_daily[startrow:rownum,]
+  MJO_10day <- c(MJO_10day, mean(dat$phase))
+} 
+
+BigDays.sfdfT$MJO_10day <- MJO_10day
+
+```
+
+PNA:  https://psl.noaa.gov/data/timeseries/daily/PNA/
+
+The indices are based on centers-of-action of 500mb height patterns. These time series utilize the NCEP/NCAR R1 dataset. The region is [(15-25N, 180-140W)-(40-50N, 180-140W)+(45-60N, 125W-105W)-(25-35N, 90W-70W)].
+
+The Pacific/ North American teleconnection pattern (PNA) is one of the most prominent modes of low-frequency variability in the Northern Hemisphere extratropics. The positive phase of the PNA pattern features above-average heights in the vicinity of Hawaii and over the intermountain region of North America, and below-average heights located south of the Aleutian Islands and over the southeastern United States. The PNA pattern is associated with strong fluctuations in the strength and location of the East Asian jet stream. The positive phase is associated with an enhanced East Asian jet stream and with an eastward shift in the jet exit region toward the western United States. The negative phase is associated with a westward retraction of that jet stream toward eastern Asia, blocking activity over the high latitudes of the North pacific, and a strong split-flow configuration over the central North Pacific.
+
+The positive phase of the PNA pattern is associated with above-average temperatures over western Canada and the extreme western United States, and below-average temperatures across the south-central and southeastern U.S. The PNA tends to have little impact on surface temperature variability over North America during summer. The associated precipitation anomalies include above-average totals in the Gulf of Alaska extending into the Pacific Northwestern United States, and below-average totals over the upper Midwestern United States.
+
+
+```{r}
+PNA_daily<- read.csv("DailyPNA.csv")
+colnames(PNA_daily) = c("Year", "Mo", "Day", "Value")
+max(PNA_daily$Value) #These need to be divided by 100
+
+PNA_daily$StandardizedPNA <- PNA_daily$Value/100
+PNA_daily <- PNA_daily %>%
+  filter(Year >= 1994 & Year <= 2021)
+
+PNA_daily$Date <- as.Date(with(PNA_daily, paste(Year, Mo, Day, sep="-")), "%Y-%m-%d")
+```
+
+```{r}
+PNA_dailyvals <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  row = PNA_daily %>%
+    filter(Date == BigDays.sfdfT$cDate[i])
+    PNA_dailyvals <- c(PNA_dailyvals, row$StandardizedPNA)
+}
+
+BigDays.sfdfT$PNA_daily <- PNA_dailyvals
+```
+
+
+```{r}
+PNA_10day <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  rownum = which(PNA_daily$Date == BigDays.sfdfT$cDate[i])
+  startrow = rownum-10
+  dat <- PNA_daily[startrow:rownum,]
+  PNA_10day <- c(PNA_10day, mean(dat$StandardizedPNA))
+} 
+
+BigDays.sfdfT$PNA_10day <- PNA_10day
+
+```
+
+Daily SST: 
+Data from: https://psl.noaa.gov/cgi-bin/db_search/DBSearch.pl?Dataset=NOAA+High-resolution+Blended+Analysis&Variable=Sea+Surface+Temperature&group=0&submit=Search
+```{r, eval = FALSE}
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1994.nc", destfile= "SST1994.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1995.nc", destfile= "SST1995.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1996.nc", destfile= "SST1996.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1997.nc", destfile= "SST1997.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1998.nc", destfile= "SST1998.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1999.nc", destfile= "SST1999.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2000.nc", destfile= "SST2000.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2001.nc", destfile= "SST12001.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2002.nc", destfile= "SST2002.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2003.nc", destfile= "SST2003.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2004.nc", destfile= "SST2004.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2005.nc", destfile= "SST2005.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2006.nc", destfile= "SST2006.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2008.nc", destfile= "SST2008.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2009.nc", destfile= "SST2009.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2007.nc", destfile= "SST2007.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2010.nc", destfile= "SST2010.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2011.nc", destfile= "SST2011.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2012.nc", destfile= "SST2012.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2013.nc", destfile= "SST2013.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2014.nc", destfile= "SST2014.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2015.nc", destfile= "SST2015.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2016.nc", destfile= "SST2016.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2017.nc", destfile= "SST2017.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2018.nc", destfile= "SST2018.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2019.nc", destfile= "SST2019.nc", mode = "wb")
+download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2020.nc", destfile= "SST2020.nc", mode = "wb")
+```
+
+```{r}
+library(raster)
+library(ncdf4)
+ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
+ncname <- "SST1994"  
+ncfname <- paste(ncpath, ncname, ".nc", sep="")
+library(ncdf4)
+tmp_raster <- raster::brick(ncfname)
+class(tmp_raster)
+```
+
+
+```{r}
+year <- seq(1994,2020, 1)
+
+leap <- seq(1996,2020, 4)
+leapyear <- sort(rep(seq(1996,2020, 4), 366))
+leapday <- rep(seq(1,366,1), length(leap))
+
+
+nonleap = year[!year %in% leap]
+nonleapyear <- sort(rep(nonleap, 365))
+nonleapday <- rep(seq(1,365,1), length(nonleap))
+nonleap <- as.data.frame(cbind(nonleapyear, nonleapday))
+
+
+leap <- as.data.frame(cbind(leapyear, leapday))
+colnames(leap) <- c(Year, Day)
+
+nonleap <- as.data.frame(cbind(nonleapyear, nonleapday))
+colnames(nonleap) <- c(Year, Day)
+
+
+ClimVars <- rbind(leap, nonleap)
+colnames(ClimVars) <- c(Year, Day)
+```
+
+```{r}
+avg_CSST <- numeric()
+avg_GAKSST <- numeric()
+avg_Nino34 <- numeric()
+max_CSST <- numeric()
+max_GAKSST <- numeric()
+max_Nino34 <- numeric()
+min_CSST <- numeric()
+min_GAKSST <- numeric()
+min_Nino34 <- numeric()
+
+for(i in 1994:2020) {
+  ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
+  ncname <- paste0("SST", i)  
+  ncfname <- paste(ncpath, ncname, ".nc", sep="")
+  raster_dat <- raster::brick(ncfname)
+    for (i in 1:dim(raster_dat)[3]) {
+      print(i)
+      sub <- subset(raster_dat, i)
+      sub <- rotate(sub)
+
+      Caribbean <- c(-90, -70, 15, 25)
+      Caribbeanextent <- as(raster::extent(Caribbean), "SpatialPolygons") %>%
+        st_as_sf()
+
+      GAK <- c(-157.5, -133.1, 50.5, 60)
+      GAKextent <- as(raster::extent(GAK), "SpatialPolygons") %>%
+        st_as_sf()
+
+      Nino <- c(-170, -120, -5, 5)
+      Ninoextent <- as(raster::extent(Nino), "SpatialPolygons") %>%
+        st_as_sf()
+
+      Caribbeandat <- crop(sub, extent(Caribbeanextent))
+      Caribbeandat <- mask(Caribbeandat, Caribbeanextent)
+
+      GAKdat <- crop(sub, extent(GAKextent))
+      GAKdat <- mask(GAKdat,GAKextent)
+
+      Ninodat <- crop(sub, extent(Ninoextent))
+      Ninodat <- mask(Ninodat, Ninoextent)
+
+     avg_CSST<- c(avg_CSST, mean(getValues(Caribbeandat), na.rm = TRUE))
+     avg_GAKSST<- c(avg_GAKSST, mean(getValues(GAKdat), na.rm = TRUE))
+     avg_Nino34 <- c(avg_Nino34, mean(getValues(Ninodat), na.rm = TRUE))
+  
+     max_CSST<- c(max_CSST, max(getValues(Caribbeandat), na.rm = TRUE))
+     max_GAKSST<- c(max_GAKSST, max(getValues(GAKdat), na.rm = TRUE))
+     max_Nino34 <- c(max_Nino34, max(getValues(Ninodat), na.rm = TRUE))
+  
+     min_CSST<- c(min_CSST, min(getValues(Caribbeandat), na.rm = TRUE))
+     min_GAKSST<- c(min_GAKSST, min(getValues(GAKdat), na.rm = TRUE))
+     min_Nino34 <- c(min_Nino34, min(getValues(Ninodat), na.rm = TRUE))
+    }
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r, eval = FALSE}
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1994.nc" = "AirTemp1994.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1995.nc", destfile= "AirTemp1995.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1996.nc", destfile= "AirTemp1996.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1997.nc", destfile= "AirTemp1997.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1998.nc", destfile= "AirTemp1998.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1999.nc", destfile= "AirTemp1999.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2000.nc", destfile= "AirTemp2000.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2001.nc", destfile= "AirTemp12001nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2002.nc", destfile= "AirTemp2002.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2003.nc", destfile= "AirTemp2003.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2004.nc", destfile= "AirTemp2004.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2005.nc", destfile= "AirTemp2005.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2006.nc", destfile= "AirTemp2006.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2008.nc", destfile= "AirTemp2008.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2009.nc", destfile= "AirTemp2009.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2007.nc", destfile= "AirTemp2007.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2010.nc", destfile= "AirTemp2010.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2011.nc", destfile= "AirTemp2011.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2012.nc", destfile= "AirTemp2012.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2013.nc", destfile= "AirTemp2013.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2014.nc", destfile= "AirTemp2014.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2015.nc", destfile= "AirTemp2015.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2016.nc", destfile= "AirTemp2016.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2017.nc", destfile= "AirTemp2017.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2018.nc", destfile= "AirTemp2018.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2019.nc", destfile= "AirTemp2019.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.2020.nc", destfile= "AirTemp2020.nc", mode = "wb")
+```
 
