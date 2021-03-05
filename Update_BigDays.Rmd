@@ -1248,7 +1248,7 @@ colnames(nonleap) <- c(Year, Day)
 
 
 ClimVars <- rbind(leap, nonleap)
-colnames(ClimVars) <- c(Year, Day)
+colnames(ClimVars) <- c("Year", "Day")
 ```
 
 ```{r}
@@ -1309,8 +1309,14 @@ for(i in 1994:2020) {
 ```
 
 
+```{r}
+ClimVars <- cbind(ClimVars, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKSST, max_Nino34, min_CSST, min_GAKSST, min_Nino34)
 
+```
 
+```{r}
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, ClimVars, file = "BigDays.RData")
+```
 
 
 
