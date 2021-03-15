@@ -730,8 +730,8 @@ BigDays.sfdfT <- cbind(as.data.frame(BigDays.sfdfT), as.data.frame(coords))
 
 
 ```{r}
-cities <- us_cities()
-counties <- us_counties()
+#cities <- us_cities()
+#counties <- us_counties()
 states <- us_states()
 sts <- state.name[!state.name %in% c("Alaska", "Hawaii")]
 stateBorders <- us_states(states = sts)
@@ -1186,32 +1186,32 @@ Daily SST:
 Data from: https://psl.noaa.gov/cgi-bin/db_search/DBSearch.pl?Dataset=NOAA+High-resolution+Blended+Analysis&Variable=Sea+Surface+Temperature&group=0&submit=Search
 ```{r, eval = FALSE}
 #download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1994.nc", destfile= "SST1994.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1995.nc", destfile= "SST1995.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1996.nc", destfile= "SST1996.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1997.nc", destfile= "SST1997.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1998.nc", destfile= "SST1998.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1999.nc", destfile= "SST1999.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2000.nc", destfile= "SST2000.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2001.nc", destfile= "SST12001.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2002.nc", destfile= "SST2002.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2003.nc", destfile= "SST2003.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2004.nc", destfile= "SST2004.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2005.nc", destfile= "SST2005.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2006.nc", destfile= "SST2006.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2008.nc", destfile= "SST2008.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2009.nc", destfile= "SST2009.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2007.nc", destfile= "SST2007.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2010.nc", destfile= "SST2010.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2011.nc", destfile= "SST2011.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2012.nc", destfile= "SST2012.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2013.nc", destfile= "SST2013.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2014.nc", destfile= "SST2014.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2015.nc", destfile= "SST2015.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2016.nc", destfile= "SST2016.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2017.nc", destfile= "SST2017.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2018.nc", destfile= "SST2018.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2019.nc", destfile= "SST2019.nc", mode = "wb")
-download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2020.nc", destfile= "SST2020.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1995.nc", destfile= "SST1995.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1996.nc", destfile= "SST1996.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1997.nc", destfile= "SST1997.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1998.nc", destfile= "SST1998.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1999.nc", destfile= "SST1999.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2000.nc", destfile= "SST2000.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2001.nc", destfile= "SST12001.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2002.nc", destfile= "SST2002.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2003.nc", destfile= "SST2003.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2004.nc", destfile= "SST2004.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2005.nc", destfile= "SST2005.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2006.nc", destfile= "SST2006.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2008.nc", destfile= "SST2008.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2009.nc", destfile= "SST2009.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2007.nc", destfile= "SST2007.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2010.nc", destfile= "SST2010.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2011.nc", destfile= "SST2011.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2012.nc", destfile= "SST2012.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2013.nc", destfile= "SST2013.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2014.nc", destfile= "SST2014.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2015.nc", destfile= "SST2015.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2016.nc", destfile= "SST2016.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2017.nc", destfile= "SST2017.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2018.nc", destfile= "SST2018.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2019.nc", destfile= "SST2019.nc", mode = "wb")
+#download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2020.nc", destfile= "SST2020.nc", mode = "wb")
 ```
 
 ```{r}
@@ -1241,14 +1241,15 @@ nonleap <- as.data.frame(cbind(nonleapyear, nonleapday))
 
 
 leap <- as.data.frame(cbind(leapyear, leapday))
-colnames(leap) <- c(Year, Day)
+colnames(leap) <- c("Year", "Day")
 
 nonleap <- as.data.frame(cbind(nonleapyear, nonleapday))
-colnames(nonleap) <- c(Year, Day)
+colnames(nonleap) <- c("Year", "Day")
 
 
-ClimVars <- rbind(leap, nonleap)
-colnames(ClimVars) <- c("Year", "Day")
+ClimVars <-rbind(leap, nonleap)
+test <- sort(ClimVars)
+ClimVars <- ClimVars[order(ClimVars$Year),]
 ```
 
 ```{r}
@@ -1311,33 +1312,82 @@ for(i in 1994:2020) {
 
 ```{r}
 ClimVars <- cbind(ClimVars, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKSST, max_Nino34, min_CSST, min_GAKSST, min_Nino34)
-
 ```
 
 ```{r}
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, ClimVars, file = "BigDays.RData")
+
+#save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, ClimVars, file = "BigDays_Backup.RData")
 ```
 
 
+```{r}
+BigDays.sfdfT$DayofYear <- yday(BigDays.sfdfT$cDate)
+
+test <- BigDays.sfdfT[1:5,]
+
+avg_CSST <- numeric()
+avg_GAKSST <- numeric()
+avg_Nino34 <- numeric()
+max_CSST <- numeric()
+max_GAKSST <- numeric()
+max_Nino34 <- numeric()
+min_CSST <- numeric()
+min_GAKSST <- numeric()
+min_Nino34 <- numeric()
+for (i in 1:dim(BigDays.sfdfT)[1]){
+  print(i)
+  year = BigDays.sfdfT$Year[i]
+  day = BigDays.sfdfT$DayofYear[i]
+  newdat <- ClimVars %>% 
+    filter(Year == year & Day == day)
+  avg_CSST <- c(avg_CSST, newdat$avg_CSST)
+  avg_GAKSST <- c(avg_GAKSST, newdat$avg_GAKSST)
+  avg_Nino34 <- c(avg_Nino34, newdat$avg_Nino34)
+  max_CSST <- c(max_CSST, newdat$max_CSST)
+  max_GAKSST <- c(max_GAKSST, newdat$max_GAKSST)
+  max_Nino34 <- c(max_Nino34, newdat$max_Nino34)
+  min_CSST <- c(min_CSST, newdat$min_CSST)
+  min_GAKSST <- c(min_GAKSST, newdat$min_GAKSST)
+  min_Nino34 <- c(min_Nino34, newdat$min_Nino34)
+}
+```
+
+```{r}
+BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKSST, max_Nino34, min_CSST, min_GAKSST, min_Nino34)
+```
 
 
+```{r}
+avg_CSST10day <- numeric()
+avg_GAKSST10day <- numeric()
+avg_Nino3410day <- numeric()
+max_CSST10day <- numeric()
+max_GAKSST10day <- numeric()
+max_Nino3410day <- numeric()
+min_CSST10day <- numeric()
+min_GAKSST10day <- numeric()
+min_Nino3410day <- numeric()
 
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  rownum = which(ClimVars$Year == BigDays.sfdfT$Year[i] & ClimVars$Day == BigDays.sfdfT$DayofYear[i])
+  startrow = rownum-10
+  dat <- ClimVars[startrow:rownum,]
+  avg_CSST10day <- c(avg_CSST10day, mean(dat$avg_CSST))
+  max_CSST10day <- c(max_CSST10day, mean(dat$max_CSST))
+  min_CSST10day <- c(min_CSST10day, mean(dat$min_CSST))
+  avg_GAKSST10day <- c(avg_GAKSST10day, mean(dat$avg_GAKSST))
+  max_GAKSST10day <- c(max_GAKSST10day, mean(dat$max_GAKSST))
+  min_GAKSST10day <- c(min_GAKSST10day, mean(dat$min_GAKSST))
+  avg_Nino3410day <- c(avg_Nino3410day, mean(dat$avg_Nino34))
+  max_Nino3410day <- c(max_Nino3410day, mean(dat$max_Nino34))
+  min_Nino3410day <- c(min_Nino3410day, mean(dat$min_Nino34))
+} 
 
+BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST10day, avg_GAKSST10day, avg_Nino3410day, max_CSST10day, max_GAKSST10day, max_Nino3410day, min_CSST10day, min_GAKSST10day, min_Nino3410day)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```
 
 
 
