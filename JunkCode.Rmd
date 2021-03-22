@@ -330,3 +330,207 @@ ggplot() +
   theme_minimal() +
   geom_sf(data = sf_fifty)
 ```
+
+*Monthly figures (highlighting seasonal trends) of climate data*
+
+## Preliminary figures of the climate data
+
+```{r}
+ClimatebyMonth <- BigDays.sfdfT %>%
+  group_by(Mo) %>%
+  summarize(maxtempanom = max(max_globalairtemp),
+            SST_max = max(SSTgradient),
+            ElNino_max  = max(monthlyElNino34),
+            monthlySIE_max = max(monthlySIE))
+
+ClimatebyYear <- BigDays.sfdfT %>%
+  group_by(Mo, Year) %>%
+  summarize(maxtempanom = max(max_globalairtemp),
+            SST_max = max(SSTgradient),
+            ElNino_max  = max(monthlyElNino34),
+            monthlySIE_max = max(monthlySIE))
+```
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(maxtempanom ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_Temp <- slope_group
+ClimatebyYear$slope_Temp <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearClimatetempgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = maxtempanom))) +
+ geom_smooth(aes(color=group_Temp), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Surface Temperature Anomalies in the U.S.") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearClimatetempgraph <- yearClimatetempgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearClimatetempgraph
+```
+
+
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(SST_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_SST <- slope_group
+ClimatebyYear$slope_SST <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearSSTgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = SST_max))) +
+ geom_smooth(aes(color=group_SST), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Positive Trend", "Negative Trend"), values = c('blue', 'red')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum Sea Surface Temperatures in Caribbean [degrees C]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearSSTgraph <- yearSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearSSTgraph
+```
+
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(ElNino_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0,  "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_ElNino <- slope_group
+ClimatebyYear$slope_ElNino <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearElNinograph <- ggplot(ClimatebyYear, (aes(x = Mo, y = ElNino_max))) +
+ geom_smooth(aes(color=group_ElNino), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum El Nino Temperatures [degrees C]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearElNinograph <- yearElNinograph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearElNinograph
+```
+
+```{r}
+ slopevals = numeric()
+slopeargs = numeric()
+for (i in 1994:2020) {
+      dat <- ClimatebyYear %>% filter(Year == i)
+      model = lm(monthlySIE_max ~ Mo, data = dat)
+      slope = model$coefficients[2]
+      slopearg = ifelse(model$coefficients[2] >= 0, "POS", "NEG")
+      slopeargs = append(slopeargs, slopearg)
+      slopevals = append(slopevals, slope)
+}
+
+slope_group = character()
+slope_vals = numeric()
+
+for (i in 1:dim(ClimatebyYear)[1]) {
+  yr = ClimatebyYear$Year[i]
+  yearfordat = (yr - 1994)
+  slope_group = append(slope_group, as.data.frame(slopeargs)[1 + yearfordat,])
+  slope_vals = append(slope_vals, as.data.frame(slopevals)[1 + yearfordat,])
+}
+
+ClimatebyYear$group_monthlySIE <- slope_group
+ClimatebyYear$slope_monthlySIE <- slope_vals
+```
+
+```{r}
+month <- month.abb
+
+yearmonthlySIEgraph <- ggplot(ClimatebyYear, (aes(x = Mo, y = monthlySIE_max))) +
+ geom_smooth(aes(color=group_monthlySIE), method = lm, span = .5, se = FALSE, size = 1) +
+  scale_colour_manual(labels = c("Negative Trend", "Positive Trend"), values = c('red', 'blue')) +
+  geom_line(color = "black", lwd = 1) +
+  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1,12,1)), labels = month) +
+ # scale_y_continuous(limits = c(1500, 3000), breaks = c(seq(1500,3000,250))) + 
+#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
+  theme_bw() +
+  xlab("Year") +
+  ylab("Maximum Arctic Sea Ice Extent [millions of square kilometers]") +
+  facet_wrap(~ Year, ncol = 3)
+
+yearmonthlySIEgraph <- yearmonthlySIEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(size = 10), axis.title=element_text(size=14), legend.title = element_blank(), legend.position = "bottom", legend.key.size = unit(1, "cm"),legend.text=element_text(size=12), panel.spacing = unit(1, "lines"))
+
+yearmonthlySIEgraph
+```
