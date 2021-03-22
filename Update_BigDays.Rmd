@@ -281,6 +281,11 @@ Groups.sfdfT <- All_Tornadoes %>%
 ## Extract Big Days ##
 ######################
 
+```{r}
+load("BigDays.RData")
+```
+
+
 Filter individual tornadoes to remove those that are not part of a large group. Group by group number and convective dates. Remove days having fewer than 10 tornadoes.
 ```{r, eval = FALSE}
 BigDays.sfdfT <- All_Tornadoes %>%
@@ -324,6 +329,130 @@ BigDayTornadoes <- BigDayTornadoes %>%
 
 sum(BigDays.sfdfT$nT)
 ```
+
+*Example of 2 clusters in the data: *
+**Extract the geographic centroids of tornado genesis on big tornado days by creating an `sf` object using `st_centroid()` that reduces the MULTIPOINT geometry to a POINT geometry. Compute the area of the group and the number of tornadoes per area (density).**
+```{r}
+groupDayCentroids.sfdfT <- st_centroid(BigDays.sfdfT)
+groupDayCentroids.sfdfT$groupArea <- st_area(st_convex_hull(BigDays.sfdfT))
+groupDayCentroids.sfdfT$groupDensity <- groupDayCentroids.sfdfT$nT/groupDayCentroids.sfdfT$groupArea
+```
+
+*Get the state borders for figure purposes. Remove Alaska and Hawaii because this research focuses on the contiguous US.*
+```{r}
+sts <- state.name[!state.name %in% c("Alaska", "Hawaii")]
+stateBorders <- us_states(states = sts)
+```
+
+
+*Extract the Hull, centroids, and tornadoes for the May 27, 1996 big day. *
+```{r}
+May27 <- BigDays.sfdfT %>%
+  filter(cDate == "1996-05-27")
+May27 <- st_convex_hull(May27)
+
+May27centroid <- groupDayCentroids.sfdfT %>%
+  filter(cDate == "1996-05-27")
+
+May27tornadoes <- BigDayTornadoes %>% 
+  filter(groupNumber == May27centroid$groupNumber)
+
+May27tornadoes <- May27tornadoes %>%
+  mutate(Hour2 = ifelse(Hour <= 6, Hour + 24, Hour))
+```
+
+**Make a map of the May 27 tornado day.**
+```{r}
+May27tornadoes$Hour2 <- cut(as.numeric(May27tornadoes$Hour2), breaks=c(6,12,18,24,30))
+
+May1996 <- (tm_shape(stateBorders) + 
+  tm_borders(col = "gray70", alpha = 1) +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") + 
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("left", "bottom"), 
+            inner.margins = c(.2, .2, .2, .2)) +
+tm_shape(May27, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") +
+  tm_borders(col = "black", lwd = 3) +
+tm_shape(May27tornadoes) +
+  tm_symbols(size = 4, col = "Hour2", alpha = 0.8, palette = "BuPu", title.col = "Time [CST]", labels = c("6 to 12", "12 to 18", "18 to 24", "0 to 6"), border.alpha = 0) +
+    tm_layout(legend.title.size = 1.1,
+            legend.position = c("right", "bottom"), 
+            legend.stack = "horizontal",
+            legend.frame = FALSE, 
+            legend.text.size = 1, legend.width = -0.2) +
+tm_shape(May27centroid) +
+  tm_symbols(size = 1.25, col = "black", shape = 24) +
+  tm_layout(title = "May 27, 1996 \n 10 tornadoes", 
+              title.position = c("center", "top"), 
+              legend.title.size = 1.4,
+              legend.position = c("right", "bottom"), 
+              legend.stack = "horizontal",
+              legend.frame = FALSE, 
+              legend.text.size = 1.2, 
+              legend.width = -0.2, 
+              title.size = 1.5))
+May1996
+```
+*Extract the Hull, centroids, and tornadoes for the May 5, 2007 big day. *
+```{r}
+May05 <- BigDays.sfdfT %>%
+  filter(cDate == "2007-05-05")
+May05 <- st_convex_hull(May05)
+
+May05centroid <- groupDayCentroids.sfdfT %>%
+  filter(cDate == "2007-05-05")
+
+May05tornadoes <- BigDayTornadoes %>% 
+  filter(groupNumber == May05centroid$groupNumber)
+
+May05tornadoes <- May05tornadoes %>%
+  mutate(Hour2 = ifelse(Hour <= 6, Hour + 24, Hour))
+```
+
+**Make a map of the May 5 tornado day.**
+```{r}
+May05tornadoes$Hour2 <- cut(May05tornadoes$Hour2, breaks=c(6,12,18,24,30))
+
+May2007 <- (tm_shape(stateBorders) + 
+  tm_borders(col = "gray70", alpha = 1) +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") +       
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("left", "bottom"), 
+            inner.margins = c(.15, .15, .15, .15)) +
+tm_shape(May05, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") +
+  tm_borders(col = "black", lwd = 3) +
+tm_shape(May05tornadoes) +
+  tm_symbols(size = 4, col = "Hour2", alpha = 0.8, palette = "BuPu", title.col = "Time [CST]", labels = c("6 to 12", "12 to 18", "18 to 24", "0 to 6"), border.alpha = 0) +
+    tm_layout(legend.title.size = 1.1,
+            legend.position = c("right", "bottom"), 
+            legend.stack = "horizontal",
+            legend.frame = FALSE, 
+            legend.text.size = 1, legend.width = -0.2) +
+tm_shape(May05centroid) +
+  tm_symbols(size = 1.25, col = "black", shape = 24)  +
+  tm_layout(title = "May 5, 2007 \n 90 tornadoes", 
+              title.position = c("center", "top"), 
+              legend.title.size = 1.4,
+              legend.position = c("right", "bottom"), 
+              legend.stack = "horizontal",
+              legend.frame = FALSE, 
+              legend.text.size = 1.2, 
+              legend.width = -0.2, 
+              title.size = 1.5)
+)
+
+May2007
+```
+*Combine the two cluster examples into a single figure.*
+```{r}
+tmap_arrange(May1996, May2007)
+```
+
+#Determine the NARR time for each cluster
 
 Round the UTC time to nearest 6 hours. This is done with the `align.time()` function from the **xts** package. Adjust it by 3 hours to get the closest time. This falls within the outbreak so you need to subtract by 3 hours (10800 seconds). This will produce the closest 3 hour NARR time that occurs before and not within the big day. 
 ```{r, eval = FALSE}
@@ -612,6 +741,274 @@ Update the BigDays.RData file. Create a back up version.
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
+
+
+Environmental Data: 
+
+*Cluster statistics by time of day. Each cluster is categorized by the closest three-hour time (defined by the NARR data) prior to the first tornado.*
+```{r}
+BigDays.sfdfT %>%
+  group_by(NARRZtime) %>%
+  summarize(NumClus = n(),
+            NumTorns = sum(nT),
+            AvgTornsperClus = NumTorns/NumClus,
+            AvgDur = mean(Duration)/3600)
+
+#How many clusters occur between 18 and 0 Z?
+(258 + 218)/830
+```
+
+*May 6, 2003 Big Day*
+```{r}
+May6 <- BigDays.sfdfT %>%
+  filter(ID == "200305062624")
+May6th <- st_convex_hull(May6)
+
+May6centroid <- groupDayCentroids.sfdfT %>%
+  filter(ID == "200305062624")
+
+May6tornadoes <- All_Tornadoes %>% 
+  filter(ID == "200305062624")
+```
+
+```{r}
+tm_shape(stateBorders) + 
+  tm_borders(col = "gray70", alpha = 1) +
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") + 
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("right", "top"), 
+            inner.margins = c(.15, .15, .1, .2)) +
+#tm_shape(counties.sf) +
+#  tm_borders(col = "gray40", alpha = .3) +
+#  tm_scale_bar(width = 8, size = 8, color.dark = "gray70") +
+  #tm_format("World", legend.position = c("right", "top"),
+#                   attr.position = c("right", "top"),
+#                   legend.frame = FALSE,
+                   #title = "May 30th Tornado Group",
+                   #title.size = 1.3,
+                   #title.position = c("left", "TOP"),
+ #                  inner.margins = c(.2, .2, .2, .2)) +
+tm_shape(May6, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3) +
+tm_shape(May6tornadoes) +
+  tm_symbols(size = 2, col = "purple4", alpha = 0.8, border.alpha = 0) +
+    tm_layout(legend.title.size = 1.1,
+            legend.position = c("right", "bottom"), 
+            legend.stack = "horizontal",
+            legend.frame = FALSE, 
+            legend.text.size = 1, legend.width = -0.2) +
+tm_shape(May6centroid) +
+  tm_symbols(size = 1.25, col = "black", shape = 24) 
+```
+
+*Plot the CAPE, HLCY, and CIN for the May 6, 2003 Big Day. First, read in the raster. *
+```{r}
+library(raster)
+ rb <- brick(paste0("/Users/lordofmornin/Desktop/Projects/tornenvir_climate/merged_AWIP32.20030506/merged_AWIP32.2003050612")) #<-- this is for varying NARR times
+  CAPE <- raster(rb, layer = 375)
+  HLCY <- raster(rb, layer = 323)
+  CIN <- raster(rb, layer = 376)
+  UGRD500 <- raster(rb, layer = 117) 
+  VGRD500 <- raster(rb, layer = 118) 
+  UGRD850 <- raster(rb, layer = 206) 
+  VGRD850 <- raster(rb, layer = 207)
+  UGRDsfc <- raster(rb, layer = 293) 
+  VGRDsfc <- raster(rb, layer = 294)     
+  DLBS <- sqrt(((UGRD500 - UGRDsfc)**2) + ((VGRD500 - VGRDsfc)**2))
+  SLBS <- sqrt(((UGRD850 - UGRDsfc)**2) + ((VGRD850 - VGRDsfc)**2))
+```
+**Convective Available Potential energy **
+```{r}
+CAPE = projectRaster(CAPE, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+May6 <- st_transform(May6, 
+  crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+```{r}
+CAPE_May6 <- crop(CAPE, extent(May6))
+CAPE_extent<- mask(CAPE_May6, May6)
+plot(CAPE_extent)
+
+maxCAPE <- which.max(CAPE_extent) #Returns a pixel number
+
+#Test that this max value equals the one in BigDays.sfdfT
+test <- getValues(CAPE_extent) 
+test<-as.matrix(test, ncol=1)
+```
+
+```{r}
+CAPEmaxpos <- xyFromCell(CAPE_extent, maxCAPE)
+
+xy <- data.frame(CAPEmaxpos)
+CAPE_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(CAPE_latlon)
+
+CAPE_latlon <- SpatialPoints(CAPE_latlon)
+proj4string(CAPE_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+```{r}
+#library(USAboundariesData)
+#counties <- us_counties()
+states <- us_states()
+```
+
+```{r}
+p1 <- tm_shape(CAPE_extent) +
+  tm_raster(title = "",  n = 6, palette = "Purples") +
+  tm_format(title = expression(paste("CAPE [J ", kg^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.15, 0, .15, .18), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.28, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+  #tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May6, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(CAPE_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p1
+```
+
+**DLBS**
+```{r}
+DLBS_May6 <- crop(DLBS, extent(May6))
+DLBS_extent<- mask(DLBS_May6, May6)
+plot(DLBS_extent)
+
+maxDLBS <- which.max(DLBS_extent)
+```
+
+```{r}
+DLBSmaxpos <- xyFromCell(DLBS_extent, maxDLBS)
+
+xy <- data.frame(DLBSmaxpos)
+DLBS_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(DLBS_latlon)
+
+DLBS_latlon <- SpatialPoints(DLBS_latlon)
+proj4string(DLBS_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+```{r}
+p2 <- tm_shape(DLBS_extent) +
+  tm_raster(title = "", n = 5, palette = "Greens") + #"YlGnBu") +
+  tm_format(title = expression(paste("Deep-Layer Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.15, 0, .15, .15), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.25, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+#  tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May6, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(DLBS_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p2
+```
+
+**Convective Inhibition **
+```{r}
+CIN_May6 <- crop(CIN, extent(May6))
+CIN_extent<- mask(CIN_May6, May6)
+
+minCIN <- which.min(CIN_extent)
+```
+
+```{r}
+CINminpos <- xyFromCell(CIN_extent, minCIN)
+
+xy <- data.frame(CINminpos)
+CIN_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(CIN_latlon)
+
+CIN_latlon <- SpatialPoints(CIN_latlon)
+proj4string(CIN_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+```{r}
+p3 <- tm_shape(CIN_extent) +
+  tm_raster(title = "", n =5, palette = "Reds") + #"YlOrBr") +
+  tm_format(title = expression(paste("CIN [J ", kg^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.15, 0, .15, .15), #bottom, left, top
+                    legend.text.size = 1., legend.width = -0.3, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+#  tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May6, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(CIN_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p3
+```
+
+**SLBS**
+```{r}
+SLBS_May6 <- crop(SLBS, extent(May6))
+SLBS_extent<- mask(SLBS_May6, May6)
+plot(SLBS_extent)
+
+maxSLBS <- which.max(SLBS_extent)
+```
+
+```{r}
+SLBSmaxpos <- xyFromCell(SLBS_extent, maxSLBS)
+
+xy <- data.frame(SLBSmaxpos)
+SLBS_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(SLBS_latlon)
+
+SLBS_latlon <- SpatialPoints(SLBS_latlon)
+proj4string(SLBS_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+```
+
+```{r}
+p4 <- tm_shape(SLBS_extent) +
+  tm_raster(title = "", n = 5, palette = "Blues") +
+  tm_format(title = expression(paste("Shallow-Layer Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.15, 0, .15, .15), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.2, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+#  tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May6, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(SLBS_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p4
+```
+
+**Combine into one figure: **
+```{r}
+tmap_arrange(p1, p2, p3, p4, ncol = 2, nrow = 2)
+```
+`Figure: Environmental conditions at 12 UTC on May 6, 2003. The black line is the spatial extent of the tornado genesis locations and the black triangle is the centroid of the locations. The first tornado in the cluster started at 14:20 UTC. The black square indicates the locations of the highest value of CAPE (3660~J~kg$^{-1}$), the lowest value of CIN ($-$149~J~kg$^{-1}$), the highest value of helicity (308~m$^2$~s$^{-2}$) and the highest value of bulk shear (33~m~s$^{-1}$).`
+
+
 ########################
 ## Population Density ##
 ########################
@@ -729,7 +1126,7 @@ BigDays.sfdfT <- cbind(as.data.frame(BigDays.sfdfT), as.data.frame(coords))
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 #cities <- us_cities()
 #counties <- us_counties()
 states <- us_states()
@@ -769,7 +1166,7 @@ Save the data.
 
 Climate Data: 
 
-```{r}
+```{r, eval = FALSE}
 load("BigDays.RData")
 ```
 
@@ -861,17 +1258,7 @@ tm_shape(stateBorders, midpoint = NA) +
   tm_borders() 
 ```
 
-
-
-
-
-
-```{r}
-test<- BigDays.sfdfT %>%
-  filter(Year == 1994 & Mo %in% c(3,4))
-```
-
-```{r}
+```{r, eval = FALSE}
 min_airtemp <- numeric()
 avg_airtemp <- numeric()
 max_airtemp <- numeric()
@@ -892,7 +1279,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 }
 ```
 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$min_airtemp <- min_airtemp
 BigDays.sfdfT$max_airtemp <- max_airtemp
 BigDays.sfdfT$avg_airtemp <- avg_airtemp
@@ -909,13 +1296,12 @@ Save the data.
 ```
 
 
-## Sea Surface Temperatures ##
+## Monthly Climate Data ##
 
 
 PROSPECTUS: 15$^{\circ}$N to 25$^{\circ}$N and 70$^{\circ}$W to 90$^{\circ}$W
 
-Sea surface temperatures for the western Caribbean. Latitude Range used: 20.0 to 4.8; Longitude Range used: 300.0 to 330.0
-```{r}
+```{r, eval = FALSE}
 #download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=15&lat2=25&lon1=270&lon2=290+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries" ,
               #destfile = "Atlantic_SST.csv", mode = "wb")
 
@@ -923,9 +1309,8 @@ Atl_SST <- read.csv(file = "Atlantic_SST.csv")
 
 ```
 
-
 Get the sea surface temperature for each big day. 
-```{r}
+```{r, eval = FALSE}
 Atlantic_SST <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -937,7 +1322,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 ```
 
 Add sea surface temperatures to the BigDays.sfdfT file. 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$Atlantic_SST <- Atlantic_SST
 names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'Atlantic_SST'] <- 'monthlyATLSST'
 ```
@@ -945,14 +1330,14 @@ names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'Atlantic_SST'] <- 'monthlyATLSST'
 
 ##Alaska SST 
 60.0 to 50.5 N and 133.1 to 157.5 W
-```{r}
+```{r, eval = FALSE}
 download.file(url = "https://psl.noaa.gov/cgi-bin/data/timeseries/timeseries.pl?ntype=1&var=SST&level=2000&lat1=50.36&lat2=59.95&lon1=133.08&lon2=156.66+&iseas=0&mon1=0&mon2=0&iarea=0&typeout=1&Submit=Create+Timeseries", destfile = "Alaska_SST.csv", mode = "wb")
 
 Alaska_SST <- read.csv(file = "Alaska_SST.csv")
 ```
 
 Get the sea surface temperature for each big day. 
-```{r}
+```{r, eval = FALSE}
 GAK_SST <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -964,7 +1349,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 ```
 
 Add sea surface temperatures to the BigDays.sfdfT file. 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$GAK_SST <- GAK_SST
 names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'GAK_SST'] <- 'monthlyGAKSST'
 ```
@@ -978,14 +1363,14 @@ https://	psl.noaa	.gov/g	cos_wgsp	/Timeser	ies/Nino	34/
 
 PROSPECTUS: 120$^{\circ}$W to 170$^{\circ}$W and 5$^{\circ}$N to 5$^{\circ}$S.
 
-```{r}
+```{r, eval = FALSE}
 download.file(url = "https://psl.noaa.gov/gcos_wgsp/Timeseries/Data/nino34.long.data",
               destfile = "Nino3_4.csv", mode = "wb")
 
 NINO <- read.csv(file = "Nino3_4.csv")
 ```
 
-```{r}
+```{r, eval = FALSE}
 ElNino34 <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -997,7 +1382,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 ```
 
 Add El Nino 3.4 data to the BigDays.sfdfT file. 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$ElNino34 <- ElNino34
 names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'ElNino34'] <- 'monthlyElNino34'
 ```
@@ -1007,11 +1392,11 @@ Arctic Sea Ice
 
 Comes from the Sea Ice Index, Sea Ice Concentrations from Nimbus-7 SMMR SSMIS and DMSP SSM/I Passive Microwave Data is the input data that the Sea Ice Index is derived from. Extent and Area are in millions of square kilometers. N 90 to 30.98 E: 180 to -180 https://nsidc.org/data/g02135?qt-data_set_tabs=2#qt-data_set_tabs
 
-```{r}
+```{r, eval = FALSE}
 seaice <- read.csv(file = "SIE.csv")
 ```
 
-```{r}
+```{r, eval = FALSE}
 
 SIE <- numeric()
 
@@ -1024,27 +1409,27 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 ```
 
 Add Sea Ice Extent to the BigDays.sfdfT file. 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$SIE<- SIE
 
 names(BigDays.sfdfT)[names(BigDays.sfdfT) == 'SIE'] <- 'monthlySIE'
 ```
 
 Save the data.
-```{r}
+```{r, eval = FALSE}
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays.RData")
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, file = "BigDays_Backup.RData")
 ```
 
-##Daily Data: 
+##Daily Climate Data: 
 NAO:
 The index is calculated with the easiest method which is the difference in the atmospheric pressure of a meteorological station near the Azores (Lisbon and Ponta Delgada or or Gibraltar, etc.) and a station near the depression of Iceland (Reykjavik and Akureyri or Stykkisholmur, etc.) The positive NAO phase represents a stronger than usual difference in pressure between the two regions. Winds from the west dominate, bringing with them warm air, while the position of the jet stream enables stronger and more frequent storms to travel across the Atlantic.
 
 https://psl.noaa.gov/data/timeseries/daily/NAO/
 Calculation Method: The indices are based on centers-of-action of 500mb height patterns. These time series utilize the NCEP/NCAR R1 dataset. The area averaged region 55-70N;70W-10W is subtracted from 35-45N; 70W-10W. The 1981-2010 period was used as climatology. Before computing these indices the 500mb height fields are spectrally truncated to total wavenumber 10 in order to emphasize large-scale aspects of the teleconnections.
 
-
-```{r}
+*Daily NAO: *
+```{r, eval = FALSE}
 
 #download.file(url = "ftp://ftp.cdc.noaa.gov/Public/map/teleconnections/nao.reanalysis.t10trunc.1948-present.txt" ,
 #              destfile = "DailyNAO.csv", mode = "wb")
@@ -1062,7 +1447,7 @@ NAO_daily <- NAO_daily %>%
 NAO_daily$Date <- as.Date(with(NAO_daily, paste(Year, Mo, Day, sep="-")), "%Y-%m-%d")
 ```
 
-```{r}
+```{r, eval = FALSE}
 NAO_dailyvals <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1075,8 +1460,8 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 BigDays.sfdfT$NAO_daily <- NAO_dailyvals
 ```
 
-
-```{r}
+*Get the 10 day average NAO*
+```{r, eval = FALSE}
 NAO_10day <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1091,9 +1476,9 @@ BigDays.sfdfT$NAO_10day <- NAO_10day
 
 ```
 
-MJO: 
+*Daily MJO: *
 
-```{r}
+```{r, eval = FALSE}
 #download.file(url = "http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt" ,
 #              destfile = "DailyMJO.csv", mode = "wb")
 MJO_daily<- read.csv("DailyMJO.csv")
@@ -1103,7 +1488,7 @@ MJO_daily <- MJO_daily %>%
 MJO_daily$Date <- as.Date(with(MJO_daily, paste(year, month, day, sep="-")), "%Y-%m-%d")
 ```
 
-```{r}
+```{r, eval = FALSE}
 MJO_dailyvals <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1116,8 +1501,8 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 BigDays.sfdfT$MJO_daily <- MJO_dailyvals
 ```
 
-
-```{r}
+*Get the 10 day average MJO*
+```{r, eval = FALSE}
 MJO_10day <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1140,8 +1525,9 @@ The Pacific/ North American teleconnection pattern (PNA) is one of the most prom
 
 The positive phase of the PNA pattern is associated with above-average temperatures over western Canada and the extreme western United States, and below-average temperatures across the south-central and southeastern U.S. The PNA tends to have little impact on surface temperature variability over North America during summer. The associated precipitation anomalies include above-average totals in the Gulf of Alaska extending into the Pacific Northwestern United States, and below-average totals over the upper Midwestern United States.
 
+*Daily PNA:*
 
-```{r}
+```{r, eval = FALSE}
 PNA_daily<- read.csv("DailyPNA.csv")
 colnames(PNA_daily) = c("Year", "Mo", "Day", "Value")
 max(PNA_daily$Value) #These need to be divided by 100
@@ -1153,7 +1539,7 @@ PNA_daily <- PNA_daily %>%
 PNA_daily$Date <- as.Date(with(PNA_daily, paste(Year, Mo, Day, sep="-")), "%Y-%m-%d")
 ```
 
-```{r}
+```{r, eval = FALSE}
 PNA_dailyvals <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1166,8 +1552,8 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 BigDays.sfdfT$PNA_daily <- PNA_dailyvals
 ```
 
-
-```{r}
+*Get the 10 day average PNA*
+```{r, eval = FALSE}
 PNA_10day <- numeric()
 
 for (i in 1:dim(BigDays.sfdfT)[1]) {
@@ -1182,7 +1568,7 @@ BigDays.sfdfT$PNA_10day <- PNA_10day
 
 ```
 
-Daily SST: 
+*Daily SST: *
 Data from: https://psl.noaa.gov/cgi-bin/db_search/DBSearch.pl?Dataset=NOAA+High-resolution+Blended+Analysis&Variable=Sea+Surface+Temperature&group=0&submit=Search
 ```{r, eval = FALSE}
 #download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.1994.nc", destfile= "SST1994.nc", mode = "wb")
@@ -1214,7 +1600,7 @@ Data from: https://psl.noaa.gov/cgi-bin/db_search/DBSearch.pl?Dataset=NOAA+High-
 #download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/noaa.oisst.v2.highres/sst.day.mean.2020.nc", destfile= "SST2020.nc", mode = "wb")
 ```
 
-```{r}
+```{r, eval = FALSE}
 library(raster)
 library(ncdf4)
 ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
@@ -1226,7 +1612,7 @@ class(tmp_raster)
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 year <- seq(1994,2020, 1)
 
 leap <- seq(1996,2020, 4)
@@ -1252,7 +1638,7 @@ test <- sort(ClimVars)
 ClimVars <- ClimVars[order(ClimVars$Year),]
 ```
 
-```{r}
+```{r, eval = FALSE}
 avg_CSST <- numeric()
 avg_GAKSST <- numeric()
 avg_Nino34 <- numeric()
@@ -1309,8 +1695,7 @@ for(i in 1994:2020) {
 }
 ```
 
-
-```{r}
+```{r, eval = FALSE}
 ClimVars <- cbind(ClimVars, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKSST, max_Nino34, min_CSST, min_GAKSST, min_Nino34)
 ```
 
@@ -1320,8 +1705,7 @@ ClimVars <- cbind(ClimVars, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKS
 #save(All_Tornadoes, BigDayCentroids.df, BigDays.sfdfT, BigDayTornadoes, Groups.sfdfT, ClimVars, file = "BigDays_Backup.RData")
 ```
 
-
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT$DayofYear <- yday(BigDays.sfdfT$cDate)
 
 test <- BigDays.sfdfT[1:5,]
@@ -1353,12 +1737,12 @@ for (i in 1:dim(BigDays.sfdfT)[1]){
 }
 ```
 
-```{r}
+```{r, eval = FALSE}
 BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST, avg_GAKSST, avg_Nino34, max_CSST, max_GAKSST, max_Nino34, min_CSST, min_GAKSST, min_Nino34)
 ```
 
-
-```{r}
+*Get the 10 day average values*
+```{r, eval = FALSE}
 avg_CSST10day <- numeric()
 avg_GAKSST10day <- numeric()
 avg_Nino3410day <- numeric()
@@ -1388,13 +1772,6 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST10day, avg_GAKSST10day, avg_Nino3410day, max_CSST10day, max_GAKSST10day, max_Nino3410day, min_CSST10day, min_GAKSST10day, min_Nino3410day)
 
 ```
-
-
-
-
-
-
-
 
 ```{r, eval = FALSE}
 #download.file(url ="ftp://ftp2.psl.noaa.gov/Datasets/ncep.reanalysis.dailyavgs/surface/air.sig995.1994.nc" = "AirTemp1994.nc", mode = "wb")
