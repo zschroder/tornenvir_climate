@@ -391,7 +391,7 @@ tm_shape(May27centroid) +
               legend.stack = "horizontal",
               legend.frame = FALSE, 
               legend.text.size = 1.2, 
-              legend.width = -0.2, 
+              legend.width = -0.3, 
               title.size = 1.5))
 May1996
 ```
@@ -441,7 +441,7 @@ tm_shape(May05centroid) +
               legend.stack = "horizontal",
               legend.frame = FALSE, 
               legend.text.size = 1.2, 
-              legend.width = -0.2, 
+              legend.width = -0.3, 
               title.size = 1.5)
 )
 
@@ -793,7 +793,7 @@ tm_shape(stateBorders) +
 tm_shape(May6, is.master = TRUE, projection = merc) +
   tm_borders(col = "black", lwd = 3) +
 tm_shape(May6tornadoes) +
-  tm_symbols(size = 2, col = "purple4", alpha = 0.8, border.alpha = 0) +
+  tm_symbols(size = 4, col = "purple4", alpha = 0.8, border.alpha = 0) +
     tm_layout(legend.title.size = 1.1,
             legend.position = c("right", "bottom"), 
             legend.stack = "horizontal",
@@ -821,7 +821,7 @@ library(raster)
 ```
 **Convective Available Potential energy **
 ```{r}
-CAPE = projectRaster(CAPE, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+#CAPE = projectRaster(CAPE, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 May6 <- st_transform(May6, 
   crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 ```
