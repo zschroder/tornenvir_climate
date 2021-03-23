@@ -272,7 +272,7 @@ airtempgraph <- ggplot(x, (aes(x = Year, y = maxairtemp))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(0,1.5), breaks = c(seq(0,1.5,0.25))) + 
+  scale_y_continuous(limits = c(0,1), breaks = c(seq(0,1,0.25))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
@@ -289,17 +289,17 @@ ggarrange(monthlySIEgraph, airtempgraph, ncol = 2, nrow = 1)
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxCSST = max(max_CSST10day))
+  summarize(maxCSST = max(avg_CSST10day))
 
 CSSTgraph <- ggplot(x, (aes(x = Year, y = maxCSST))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(30,33), breaks = c(seq(30,33,.5))) + 
+  scale_y_continuous(limits = c(28.6,30), breaks = c(seq(28.6,30,.2))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab("Maximum CSST [degrees C]")
+  ylab("Maximum 10-day average CSST [degrees C]")
 
 CSSTgraph <- CSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 CSSTgraph
@@ -308,17 +308,17 @@ CSSTgraph
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxGAKSST = max(max_GAKSST10day))
+  summarize(maxGAKSST = max(avg_GAKSST10day))
 
 GAKSSTgraph <- ggplot(x, (aes(x = Year, y = maxGAKSST))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(13,19), breaks = c(seq(13,19,.5))) + 
+  scale_y_continuous(limits = c(10,15), breaks = c(seq(10,15,.5))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab("Maximum GAKSST [degrees C]")
+  ylab("Maximum 10-day average GAKSST [degrees C]")
 
 GAKSSTgraph <- GAKSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 GAKSSTgraph
@@ -328,17 +328,17 @@ El Nino 10 day average
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxNino = mean(avg_Nino3410day))
+  summarize(maxNino = max(avg_Nino3410day))
 
 Ninograph <- ggplot(x, (aes(x = Year, y = maxNino))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(26, 29), breaks = c(seq(26,29,0.5))) + 
+  scale_y_continuous(limits = c(27, 30), breaks = c(seq(27,30,0.5))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab("10 day average El Nino 3.4")
+  ylab("Maximum 10-day average El Nino 3.4")
 
 Ninograph <- Ninograph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 Ninograph
@@ -348,7 +348,7 @@ NAO 10 day average
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxNAO = mean(NAO_10day))
+  summarize(maxNAO = max(NAO_10day))
 
 NAOgraph <- ggplot(x, (aes(x = Year, y = maxNAO))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
@@ -358,7 +358,7 @@ NAOgraph <- ggplot(x, (aes(x = Year, y = maxNAO))) +
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab("NAO 10 day average")
+  ylab("Maximum 10-day average NAO")
 
 NAOgraph <- NAOgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 NAOgraph
@@ -368,37 +368,37 @@ MJO 10 day average
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxMJO = mean(MJO_10day))
+  summarize(maxMJO = max(MJO_10day))
 
 MJOgraph <- ggplot(x, (aes(x = Year, y = maxMJO))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
+ geom_smooth(method = lm, span = .5, se = FALSE, color = "red", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(2.5, 6), breaks = c(seq(2.5,6,0.5))) + 
+  scale_y_continuous(limits = c(6, 8), breaks = c(seq(6,8,0.5))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab(" Maximum MJO 10 day average")
+  ylab(" Maximum 10-day average MJO")
 
 MJOgraph <- MJOgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 MJOgraph
 ```
 
-MJO 10 day average
+PNA 10 day average
 ```{r}
 x <-  BigDays.sfdfT %>%
   group_by(Year) %>%
-  summarize(maxPNA = mean(PNA_10day))
+  summarize(maxPNA = max(PNA_10day))
 
 PNAgraph <- ggplot(x, (aes(x = Year, y = maxPNA))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "red", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(-1, 1), breaks = c(seq(-1,1,0.5))) + 
+  scale_y_continuous(limits = c(0.5, 4), breaks = c(seq(0.5,4,0.5))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
-  ylab(" Maximum PNA 10 day average")
+  ylab(" Maximum 10-day average PNA")
 
 PNAgraph <- PNAgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
 PNAgraph
@@ -829,7 +829,7 @@ ranef(CAPE_m4)
 ```
 
 ```{r}
-CAPE_m5 <- lmer(sqrtCAPE ~SSTgradient + avg_Nino3410day + PNA_10day +  MJO_10day  + (1|Mo) , data = BigDays.sfdfT)
+CAPE_m5 <- lmer(sqrtCAPE ~ PNA_10day +  MJO_10day  + (1|Mo) , data = BigDays.sfdfT)
 summary(CAPE_m5)
 ranef(CAPE_m5)
 ```
@@ -888,13 +888,11 @@ To read these, you must square them. For every unit increase in the SST gradient
 confint(CAPE_m5)
 ```
                  2.5 %      97.5 %
-.sig01           6.362360607  14.8815254
-.sigma          12.094736013  13.3259196
-(Intercept)     17.447434779 105.4540943
-SSTgradient     -1.380477164   0.4028696
-avg_Nino3410day -1.855564610   0.7108560
-PNA_10day       -1.285601185   0.2679201
-MJO_10day       -0.002176422   1.0043775
+.sig01       6.26715307 14.6176034
+.sigma      12.10828736 13.3407634
+(Intercept) 30.63421314 42.7586271
+PNA_10day   -1.29272690  0.2198203
+MJO_10day    0.01432525  1.0131755
 
 *Plot the observed vs Predicted values of CAPE*
 ```{r}
