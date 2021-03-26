@@ -496,7 +496,7 @@ ggarrange(plot_CAPE, plot_CIN, plot_DLBS, plot_SLBS, ncol = 2, nrow = 2)
 
 *What is the correlation between the climate variables? *
 ```{r}
-ClimVars <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ArcticmonthlySIE = BigDays.sfdfT$monthlySIE, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
 ```
 
 *Create a figure to show correlations between the climate variables. *
@@ -512,7 +512,7 @@ BigDays.sfdfT <- BigDays.sfdfT %>%
 
 *Now let's look at the correlation matrix again: *
 ```{r}
-ClimVars2 <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, SSTgradient = BigDays.sfdfT$SSTgradient, ArcticmonthlySIE = BigDays.sfdfT$monthlySIE, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
 
 corrplot.mixed(cor(ClimVars2), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
@@ -533,22 +533,24 @@ All collinearity issues have been removed.
 ##DLBS: 
 *What is the relationship between these variables and DLBS? *
 ```{r}
-DLBS_env <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, DLBS = BigDays.sfdfT$maxBS_deep)
+DLBS_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, DLBS = BigDays.sfdfT$maxBS_deep)
 
 
 corrplot.mixed(cor(DLBS_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
 
 ```{r}
-DLBS_m1 <- lmer(maxBS_deep ~ Year + avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+DLBS_m1 <- lm(maxBS_deep ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+
+DLBS_m1 <- lmer(maxBS_deep ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m1)
 ranef(DLBS_m1) #There is a strong seasonal variation in DLBS values. 
 ```
 
 ```{r}
-DLBS_m2 <- lmer(maxBS_deep ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Year), data = BigDays.sfdfT)
+DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient+ NAO_10day + PNA_10day+ (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m2)
-ranef(DLBS_m2) #There is not a strong annual variation in DLBS values  
+ranef(DLBS_m2) 
 ```
 
 Month is the only random effect. 
@@ -668,15 +670,17 @@ corrplot.mixed(cor(SLBS_env), tl.col="black", lower.col="black", number.cex = 1,
 ```
 
 ```{r}
-SLBS_m1 <- lmer(maxBS_shallow ~ Year + avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+SLBS_m1 <- lm(maxBS_shallow ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+SLBS_m1 <- lmer(maxBS_shallow ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(SLBS_m1)
 ranef(SLBS_m1) #There is a strong seasonal variation in SLBS values. 
 ```
 
 ```{r}
-SLBS_m2 <- lmer(maxBS_shallow ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Year), data = BigDays.sfdfT)
+m1 <- lm(maxBS_shallow ~ SSTgradient + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+SLBS_m2 <- lmer(maxBS_shallow ~ SSTgradient + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(SLBS_m2)
-ranef(SLBS_m2) #There is not a strong annual variation in SLBS values  
+ranef(SLBS_m2) 
 ```
 
 Month is the only random effect. 
@@ -804,13 +808,17 @@ sqrtCAPE[is.nan(sqrtCAPE)] <- 0
 
 
 ```{r}
-CAPE_m1 <- lmer(sqrtCAPE ~ Year + avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m1 <- lm(maxCAPE ~  SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day , data = BigDays.sfdfT)
+hist(CAPE_m1$residuals)
+sm.density(CAPE_m1$residuals, model = "Normal")
+
+CAPE_m1 <- lmer(maxCAPE ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(CAPE_m1)
 ranef(CAPE_m1) #There is a strong seasonal variation in CAPE values. 
 ```
 
 ```{r}
-CAPE_m2 <- lmer(sqrtCAPE ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Year), data = BigDays.sfdfT)
+CAPE_m2 <- lmer(maxCAPE ~  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(CAPE_m2)
 ranef(CAPE_m2) #There is a strong annual variation in CAPE values  
 ```
