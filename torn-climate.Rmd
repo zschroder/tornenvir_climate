@@ -354,7 +354,7 @@ NAOgraph <- ggplot(x, (aes(x = Year, y = maxNAO))) +
  geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
   geom_line(color = "black", lwd = 1) +
   scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(-1, 1), breaks = c(seq(-1,1,0.5))) + 
+  scale_y_continuous(limits = c(0.5, 3), breaks = c(seq(0.5,3,0.5))) + 
 #  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
   theme_bw() +
   xlab("Year") +
@@ -507,7 +507,10 @@ corrplot.mixed(cor(ClimVars), tl.col="black", lower.col="black", number.cex = 1,
 *There is a strong correlation between Caribbean sea surface temperature (ATL_SST) and Gulf of Alaska sea surface temperatures (GAK_SST). Therefore, we need to account for this. We do this by creating a new variable that is the gradient between ATL_SST and GAK_SST. *
 ```{r}
 BigDays.sfdfT <- BigDays.sfdfT %>%
-  mutate(SSTgradient = max_CSST10day - max_GAKSST10day)
+  mutate(SSTgradient_10day = max_CSST10day - max_GAKSST10day,
+         SSTgradient_20day = max_CSST20day - max_GAKSST20day,
+         SSTgradient_30day = max_CSST30day - max_GAKSST30day,
+         SSTgradient_5day = max_CSST5day - max_GAKSST5day)
 ```
 
 *Now let's look at the correlation matrix again: *
@@ -540,59 +543,37 @@ corrplot.mixed(cor(DLBS_env), tl.col="black", lower.col="black", number.cex = 1,
 ```
 
 ```{r}
-DLBS_m1 <- lm(maxBS_deep ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
-
-DLBS_m1 <- lmer(maxBS_deep ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+DLBS_m1 <- lm(maxBS_deep ~ SSTgradient_30day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
 summary(DLBS_m1)
-ranef(DLBS_m1) #There is a strong seasonal variation in DLBS values. 
 ```
 
 ```{r}
-DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient+ NAO_10day + PNA_10day+ (1|Mo), data = BigDays.sfdfT)
+DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m2)
-ranef(DLBS_m2) 
+ranef(DLBS_m2) #There is a strong seasonal variation in DLBS values. 
 ```
 
-Month is the only random effect. 
 ```{r}
-DLBS_m3 <- lmer(maxBS_deep ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
+DLBS_m3 <- lmer(maxBS_deep ~ SSTgradient_10day + NAO_10day + PNA_10day+ (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m3)
-ranef(DLBS_m3)
-```
-
-```{r}
-DLBS_m4 <- lmer(maxBS_deep ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
-summary(DLBS_m4)
-ranef(DLBS_m4)
-```
-
-```{r}
-DLBS_m5 <- lmer(maxBS_deep ~ avg_globalairtemp + SSTgradient + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
-summary(DLBS_m5)
-ranef(DLBS_m5)
-```
-
-```{r}
-DLBS_m6 <- lmer(maxBS_deep ~ avg_globalairtemp + SSTgradient + NAO_10day + PNA_10day + (1|Mo), data = BigDays.sfdfT)
-summary(DLBS_m6)
-ranef(DLBS_m6)
+ranef(DLBS_m3) 
 ```
 
 *Model 6 is the best*
 ```{r}
-AIC(DLBS_m1 ,DLBS_m2 ,DLBS_m3 ,DLBS_m4 ,DLBS_m5 ,DLBS_m6)
+AIC(DLBS_m1 ,DLBS_m2 ,DLBS_m3)
 ```
 
 *Check the residuals of model 3 of DLBS.*
 ```{r}
-plot(residuals(DLBS_m6)) 
+plot(residuals(DLBS_m3)) 
 ```
 There is no relationship between the residuals.
 
 *Make a plot of the standardized residuals for the DLBS model*
 ```{r}
-DLBSmod.df <- fortify.merMod(model=DLBS_m6, data = getData(DLBS_m6))
-DLBSmod.df$predDLBS <- predict(DLBS_m6)
+DLBSmod.df <- fortify.merMod(model=DLBS_m3, data = getData(DLBS_m3))
+DLBSmod.df$predDLBS <- predict(DLBS_m3)
 
 p1 <- ggplot(DLBSmod.df, aes(x = .scresid)) +
   geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
@@ -613,7 +594,7 @@ Conditional standardized residuals from the linear regression model. (A) Histogr
 
 *How does the model do compared to the actual values? *
 ```{r}
-predictDLBS <- predict(DLBS_m6)
+predictDLBS <- predict(DLBS_m3)
 BigDays.sfdfT$predDLBS <- predictDLBS
 
 cor(BigDays.sfdfT$maxBS_deep, predictDLBS)
@@ -622,13 +603,13 @@ This model explains 52% of the variation of DLBS.
 
 *Make a table of the model coefficients. *
 ```{r}
-DLBSmod_coefs <- summary(DLBS_m6)
+DLBSmod_coefs <- summary(DLBS_m3)
 xtable(DLBSmod_coefs$coefficients, digits = 3)
 ```
 
 *What are the confidence intervals for the model? *
 ```{r}
-confint(DLBS_m6)
+confint(DLBS_m3)
 ```
                  2.5 %      97.5 %
 .sig01             1.7438926  4.91806529
@@ -655,6 +636,122 @@ ggplot() +
               col = "blue") + 
   ylab("Estimated DLBS [m/s]") + 
       xlab("Observed DLBS [m/s]") +
+      theme_minimal() + 
+      theme(text = element_text(size=15))
+```
+
+##CAPE: 
+*What is the relationship between these variables and CAPE? *
+```{r}
+CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CAPE = BigDays.sfdfT$maxCAPE)
+
+
+corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
+```
+
+```{r}
+CAPE_m1 <- lm(maxCAPE ~  SSTgradient_20day + avg_Nino3410day + NAO_30day + PNA_5day +  MJO_10day , data = BigDays.sfdfT)
+summary(CAPE_m1)
+hist(CAPE_m1$residuals)
+library(sm)
+sm.density(CAPE_m1$residuals, model = "Normal")
+```
+
+```{r}
+CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_20day + avg_Nino3410day + NAO_30day + PNA_5day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m2)
+ranef(CAPE_m2) #There is a strong seasonal variation in CAPE values. 
+```
+
+```{r}
+CAPE_m3 <- lmer(maxCAPE ~  SSTgradient_20day + PNA_5day + MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m3)
+ranef(CAPE_m3) #There is a strong annual variation in CAPE values  
+```
+
+Month is the only random effect. 
+```{r}
+CAPE_m4<- lmer(maxCAPE ~ PNA_5day + MJO_10day + (1|Mo) , data = BigDays.sfdfT)
+summary(CAPE_m4)
+ranef(CAPE_m4)
+```
+
+```{r}
+AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4)
+```
+Using AIC It would have me believe that model 3 is significantly better than all of the others. However, ElNino and avg_airtemp are not important in describing CAPE and should be eliminated. 
+
+*Check the residuals of model 5 of CAPE.*
+```{r}
+plot(residuals(CAPE_m3)) 
+```
+There is no relationship between the residuals.
+
+*Make a plot of the standardized residuals for the CAPE model*
+```{r}
+CAPEmod.df <- fortify.merMod(model=CAPE_m3, data = getData(CAPE_m3), na.rm = TRUE)
+CAPEmod.df$predCAPE <- predict(CAPE_m3)
+
+p1 <- ggplot(CAPEmod.df, aes(x = .scresid)) +
+  geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
+  xlab("Standardized Residual") + ylab("Frequency") +
+  ggtitle("A") +
+  theme_minimal() + theme(text = element_text(size=25))
+
+p2 <- ggplot(CAPEmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
+         geom_point(size = 2) +
+        # scale_x_log10() +
+         scale_color_discrete(name = "Month") +
+  xlab("CAPE [J/kg]") + ylab("Standardized Residual") +
+  ggtitle("B") +
+  theme_minimal() + theme(text = element_text(size=26))
+grid.arrange(p1, p2, ncol = 2)
+```
+Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of CAPE. The pattern in B indicates that predictions for larger values of CAPE are less accurate. 
+
+*How does the model do compared to the actual values? *
+```{r}
+predictCAPE <- predict(CAPE_m3)
+BigDays.sfdfT$predCAPE <- predictCAPE
+
+cor(BigDays.sfdfT$maxCAPE, predictCAPE)
+```
+This model explains 57% of the variation of CAPE.
+
+*Make a table of the model coefficients. *
+```{r}
+CAPEmod_coefs <- summary(CAPE_m3)
+xtable(CAPEmod_coefs$coefficients**2, digits = 3)
+```
+To read these, you must square them. For every unit increase in the SST gradient, CAPE increases by 24%. (Is that right?)
+
+*What are the confidence intervals for the model? *
+```{r}
+confint(CAPE_m3)
+```
+                 2.5 %      97.5 %
+.sig01       6.26715307 14.6176034
+.sigma      12.10828736 13.3407634
+(Intercept) 30.63421314 42.7586271
+PNA_10day   -1.29272690  0.2198203
+MJO_10day    0.01432525  1.0131755
+
+*Plot the observed vs Predicted values of CAPE*
+```{r}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = maxCAPE, 
+                 y = predCAPE**2, col = Mo), 
+             size = 5, 
+             show.legend = TRUE,  
+             stroke = 0, 
+             alpha = 0.8) +
+      scale_colour_continuous(type = "viridis") +
+  geom_abline(slope = 1, 
+                  size = 1.25,
+              col = "blue") + 
+  ylab("Estimated CAPE [J/kg]") + 
+      xlab("Observed CAPE [J/kg]") +
       theme_minimal() + 
       theme(text = element_text(size=15))
 ```
@@ -785,142 +882,7 @@ ggplot() +
 
 
 #Still working:
-##CAPE: 
-*What is the relationship between these variables and CAPE? *
-```{r}
-CAPE_env <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CAPE = BigDays.sfdfT$maxCAPE)
 
-
-corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
-```
-
-```{r}
-hist(log(BigDays.sfdfT$maxCAPE))
-hist((BigDays.sfdfT$maxCAPE)**2)
-hist(sqrt(BigDays.sfdfT$maxCAPE))
-```
-
-Make negative CAPE values 0. 
-```{r}
-sqrtCAPE <- sqrt(BigDays.sfdfT$maxCAPE)
-sqrtCAPE[is.nan(sqrtCAPE)] <- 0
-```
-
-
-```{r}
-CAPE_m1 <- lm(maxCAPE ~  SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day , data = BigDays.sfdfT)
-hist(CAPE_m1$residuals)
-sm.density(CAPE_m1$residuals, model = "Normal")
-
-CAPE_m1 <- lmer(maxCAPE ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
-summary(CAPE_m1)
-ranef(CAPE_m1) #There is a strong seasonal variation in CAPE values. 
-```
-
-```{r}
-CAPE_m2 <- lmer(maxCAPE ~  MJO_10day + (1|Mo), data = BigDays.sfdfT)
-summary(CAPE_m2)
-ranef(CAPE_m2) #There is a strong annual variation in CAPE values  
-```
-
-Month is the only random effect. 
-```{r}
-CAPE_m3 <- lmer(sqrtCAPE ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo) , data = BigDays.sfdfT)
-summary(CAPE_m3)
-ranef(CAPE_m3)
-```
-
-```{r}
-CAPE_m4 <- lmer(sqrtCAPE ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo) , data = BigDays.sfdfT)
-summary(CAPE_m4)
-ranef(CAPE_m4)
-```
-
-```{r}
-CAPE_m5 <- lmer(sqrtCAPE ~ PNA_10day +  MJO_10day  + (1|Mo) , data = BigDays.sfdfT)
-summary(CAPE_m5)
-ranef(CAPE_m5)
-```
-
-```{r}
-AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4,CAPE_m5)
-```
-Using AIC It would have me believe that model 3 is significantly better than all of the others. However, ElNino and avg_airtemp are not important in describing CAPE and should be eliminated. 
-
-*Check the residuals of model 5 of CAPE.*
-```{r}
-plot(residuals(CAPE_m5)) 
-```
-There is no relationship between the residuals.
-
-*Make a plot of the standardized residuals for the CAPE model*
-```{r}
-CAPEmod.df <- fortify.merMod(model=CAPE_m5, data = getData(CAPE_m5), na.rm = TRUE)
-CAPEmod.df$predCAPE <- predict(CAPE_m5)
-
-p1 <- ggplot(CAPEmod.df, aes(x = .scresid)) +
-  geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
-  xlab("Standardized Residual") + ylab("Frequency") +
-  ggtitle("A") +
-  theme_minimal() + theme(text = element_text(size=25))
-
-p2 <- ggplot(CAPEmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
-         geom_point(size = 2) +
-        # scale_x_log10() +
-         scale_color_discrete(name = "Month") +
-  xlab("CAPE [J/kg]") + ylab("Standardized Residual") +
-  ggtitle("B") +
-  theme_minimal() + theme(text = element_text(size=26))
-grid.arrange(p1, p2, ncol = 2)
-```
-Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of CAPE. The pattern in B indicates that predictions for larger values of CAPE are less accurate. 
-
-*How does the model do compared to the actual values? *
-```{r}
-predictCAPE <- predict(CAPE_m5)
-BigDays.sfdfT$predCAPE <- predictCAPE
-
-cor(BigDays.sfdfT$maxCAPE, predictCAPE)
-```
-This model explains 57% of the variation of CAPE.
-
-*Make a table of the model coefficients. *
-```{r}
-CAPEmod_coefs <- summary(CAPE_m5)
-xtable(CAPEmod_coefs$coefficients**2, digits = 3)
-```
-To read these, you must square them. For every unit increase in the SST gradient, CAPE increases by 24%. (Is that right?)
-
-*What are the confidence intervals for the model? *
-```{r}
-confint(CAPE_m5)
-```
-                 2.5 %      97.5 %
-.sig01       6.26715307 14.6176034
-.sigma      12.10828736 13.3407634
-(Intercept) 30.63421314 42.7586271
-PNA_10day   -1.29272690  0.2198203
-MJO_10day    0.01432525  1.0131755
-
-*Plot the observed vs Predicted values of CAPE*
-```{r}
-ggplot() +
-  geom_point(data = BigDays.sfdfT, 
-             aes(x = maxCAPE, 
-                 y = predCAPE**2, col = Mo), 
-             size = 5, 
-             show.legend = TRUE,  
-             stroke = 0, 
-             alpha = 0.8) +
-      scale_colour_continuous(type = "viridis") +
-  geom_abline(slope = 1, 
-                  size = 1.25,
-              col = "blue") + 
-  ylab("Estimated CAPE [J/kg]") + 
-      xlab("Observed CAPE [J/kg]") +
-      theme_minimal() + 
-      theme(text = element_text(size=15))
-```
 
 ##CIN: 
 *What is the relationship between these variables and CIN? *
