@@ -1557,7 +1557,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-5
   dat <- MJO_daily[startrow:rownum,]
-  MJO_5day <- c(MJO_5day, mean(dat$StandardizedMJO))
+  MJO_5day <- c(MJO_5day, mean(dat$phase))
 } 
 
 BigDays.sfdfT$MJO_5day <- MJO_5day
@@ -1573,7 +1573,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-10
   dat <- MJO_daily[startrow:rownum,]
-  MJO_10day <- c(MJO_10day, mean(dat$StandardizedMJO))
+  MJO_10day <- c(MJO_10day, mean(dat$phase))
 } 
 
 BigDays.sfdfT$MJO_10day <- MJO_10day
@@ -1589,7 +1589,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-20
   dat <- MJO_daily[startrow:rownum,]
-  MJO_20day <- c(MJO_20day, mean(dat$StandardizedMJO))
+  MJO_20day <- c(MJO_20day, mean(dat$phase))
 } 
 
 BigDays.sfdfT$MJO_20day <- MJO_20day
@@ -1605,7 +1605,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-30
   dat <- MJO_daily[startrow:rownum,]
-  MJO_30day <- c(MJO_30day, mean(dat$StandardizedMJO))
+  MJO_30day <- c(MJO_30day, mean(dat$phase))
 } 
 
 BigDays.sfdfT$MJO_30day <- MJO_30day
