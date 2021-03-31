@@ -543,14 +543,40 @@ corrplot.mixed(cor(DLBS_env), tl.col="black", lower.col="black", number.cex = 1,
 ```
 
 ```{r}
-DLBS_m1 <- lm(maxBS_deep ~ SSTgradient_30day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+DLBS_m1 <- lm(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
 summary(DLBS_m1)
+```
+
+```{r}
+DLBSByMonth <- BigDays.sfdfT %>% 
+  group_by(Mo) %>%
+  summarize(avgDLBS = mean(maxBS_deep)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by month`
+```{r}
+ggplot(DLBSByMonth, aes(x = as.factor(Mo), y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(DLBSByMonth, aes(x = Mo, y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+ scale_x_continuous(breaks = seq(1, 12, 1), labels = month.abb) +
+  scale_y_continuous(limits = c(0, 40)) +
+  coord_polar(start =0) +
+  labs(x = "Month", y = "Averaged Extremes of Deep-Layer Bulk Shear [m/s]") +
+  theme_minimal() )
 ```
 
 ```{r}
 DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m2)
 ranef(DLBS_m2) #There is a strong seasonal variation in DLBS values. 
+#Changing the non significant to 5, 20, or 30 day data does not change the significance results. 
 ```
 
 ```{r}
@@ -559,7 +585,7 @@ summary(DLBS_m3)
 ranef(DLBS_m3) 
 ```
 
-*Model 6 is the best*
+*Model 3 is the best*
 ```{r}
 AIC(DLBS_m1 ,DLBS_m2 ,DLBS_m3)
 ```
@@ -643,7 +669,7 @@ ggplot() +
 ##CAPE: 
 *What is the relationship between these variables and CAPE? *
 ```{r}
-CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CAPE = BigDays.sfdfT$maxCAPE)
+CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CAPE = BigDays.sfdfT$maxCAPE)
 
 
 corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
@@ -658,6 +684,45 @@ sm.density(CAPE_m1$residuals, model = "Normal")
 ```
 
 ```{r}
+CAPEByMonth <- BigDays.sfdfT %>% 
+  group_by(Mo) %>%
+  summarize(avgCAPE = mean(maxCAPE)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by month`
+```{r}
+ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+ scale_x_discrete(breaks = seq(1, 12, 1), labels = month.abb) +
+  scale_y_continuous(limits = c(0, 4000)) +
+  coord_polar(start =0) +
+  labs(x = "Month", y = "Averaged Extremes of CAPE [J/kg]") +
+  theme_minimal() )
+```
+
+```{r}
+CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m2)
+ranef(CAPE_m2) #There is a strong seasonal variation in CAPE values. 
+```
+
+```{r}
+CAPE_m3 <- lmer(maxCAPE ~ MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m3)
+ranef(CAPE_m3) #There is a strong annual variation in CAPE values  
+```
+
+Month is the only random effect. 
+
+```{r}
 CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_20day + avg_Nino3410day + NAO_30day + PNA_5day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
 summary(CAPE_m2)
 ranef(CAPE_m2) #There is a strong seasonal variation in CAPE values. 
@@ -669,7 +734,6 @@ summary(CAPE_m3)
 ranef(CAPE_m3) #There is a strong annual variation in CAPE values  
 ```
 
-Month is the only random effect. 
 ```{r}
 CAPE_m4<- lmer(maxCAPE ~ PNA_5day + MJO_10day + (1|Mo) , data = BigDays.sfdfT)
 summary(CAPE_m4)

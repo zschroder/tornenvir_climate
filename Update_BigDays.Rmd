@@ -61,6 +61,8 @@ st_crs(Torn50_19.sfdf) <- WGS84
 
 In the 2020 data, we can also use the start lat and lon to create an `sp` object. We then can convert it to `sf` data frame and set the coordinate reference system (crs) to EPSG 4326 [WGS 84]. However, we need to adjust the column headers of the 2020 tornado files to match those of the 1950 to 2019 data frame. 
 
+https://www.ncdc.noaa.gov/stormevents/choosedates.jsp?statefips=-999%2CALL
+https://www.ncdc.noaa.gov/stormevents/ftp.jsp
 Read the 2020 tornado data into R.
 ```{r, eval = FALSE}
 Torn2020.spdf <-read.csv(file = "2020_TornadoData.csv")
