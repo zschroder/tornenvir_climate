@@ -461,6 +461,8 @@ Round the UTC time to nearest 6 hours. This is done with the `align.time()` func
 library(xts)
 BigDays.sfdfT$StartTime_UTC <- force_tz(BigDays.sfdfT$StartTime_UTC, tzone = "UTC")
 BigDays.sfdfT$NARRtime <- (align.time(BigDays.sfdfT$StartTime_UTC, n = (60 * 60 * 3)) - 3600 * 3)
+
+BigDays.sfdfT$Hour_UTC <-  format(as.POSIXct(strptime(BigDays.sfdfT$StartTime_UTC,"%Y-%m-%d %H:%M:%S",tz="")) ,format = "%H")
 ```
 
 Split the NARR date and time into their individual variables. Then bind the columns for BigDays.sfdfT. NOTE: cannot do a mutate because 00Z produces NAs. DON'T USE!
