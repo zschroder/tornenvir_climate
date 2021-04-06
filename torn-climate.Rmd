@@ -241,6 +241,23 @@ yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "bla
 ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
 ```
 
+```{r}
+max(BigDays.sfdfT$maxCAPE)
+max(BigDays.sfdfT$minCIN)
+max(BigDays.sfdfT$maxBS_deep)
+max(BigDays.sfdfT$maxBS_shallow)
+
+min(BigDays.sfdfT$maxCAPE)
+min(BigDays.sfdfT$minCIN)
+min(BigDays.sfdfT$maxBS_deep)
+min(BigDays.sfdfT$maxBS_shallow)
+
+mean(BigDays.sfdfT$maxCAPE)
+mean(BigDays.sfdfT$minCIN)
+mean(BigDays.sfdfT$maxBS_deep)
+mean(BigDays.sfdfT$maxBS_shallow)
+```
+
 #Look at the annual trends in climate variables. 
 *Yearly trends in climate variables*
 ```{r}
@@ -408,6 +425,30 @@ PNAgraph
 ggarrange(CSSTgraph, GAKSSTgraph, Ninograph, NAOgraph, MJOgraph, PNAgraph, ncol = 2, nrow = 3)
 ```
 
+```{r}
+max(BigDays.sfdfT$max_CSST)
+max(BigDays.sfdfT$max_GAKSST)
+max(BigDays.sfdfT$max_Nino34)
+max(BigDays.sfdfT$NAO_daily)
+max(BigDays.sfdfT$PNA_daily)
+max(BigDays.sfdfT$MJO_daily)
+
+min(BigDays.sfdfT$max_CSST)
+min(BigDays.sfdfT$max_GAKSST)
+min(BigDays.sfdfT$max_Nino34)
+min(BigDays.sfdfT$NAO_daily)
+min(BigDays.sfdfT$PNA_daily)
+min(BigDays.sfdfT$MJO_daily)
+
+mean(BigDays.sfdfT$max_CSST)
+mean(BigDays.sfdfT$max_GAKSST)
+mean(BigDays.sfdfT$max_Nino34)
+mean(BigDays.sfdfT$NAO_daily)
+mean(BigDays.sfdfT$PNA_daily)
+mean(BigDays.sfdfT$MJO_daily)
+```
+
+
 #The Models: 
 
 *Check the distributions of the response variables: *
@@ -495,7 +536,7 @@ ggarrange(plot_CAPE, plot_CIN, plot_DLBS, plot_SLBS, ncol = 2, nrow = 2)
 
 *What is the correlation between the climate variables? *
 ```{r}
-ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day,Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
 ```
 
 *Create a figure to show correlations between the climate variables. *
@@ -538,7 +579,7 @@ mean(BigDays.sfdfT$SSTgradient_10day)
 
 *Now let's look at the correlation matrix again: *
 ```{r}
-ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
 
 corrplot.mixed(cor(ClimVars2), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
@@ -548,7 +589,7 @@ There is a significant correlation of 0.83 between the SSTgradient and ArcticSIE
 This relationship indicates that the stronger the gradient in SST between the Caribbean and the Gulf of Alaska the more Arctic Sea Ice. The large correlation between these two climate variables will cause a collinearity issue in our models. As a result, one of these variables should be removed. I remove the ArcticSIE variable because it makes less physical sense. The SST gradient implies a larger magnitude of Rossby waves that can influence intense convection across the United States. 
 
 ```{r}
-ClimVars3 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars3 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
 
 
 corrplot.mixed(cor(ClimVars3), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
@@ -559,7 +600,7 @@ All collinearity issues have been removed.
 ##DLBS: 
 *What is the relationship between these variables and DLBS? *
 ```{r}
-DLBS_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, DLBS = BigDays.sfdfT$maxBS_deep)
+DLBS_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, DLBS = BigDays.sfdfT$maxBS_deep)
 
 
 corrplot.mixed(cor(DLBS_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
@@ -592,6 +633,58 @@ ggplot(DLBSByMonth, aes(x = as.factor(Mo), y = avgDLBS)) +
   scale_y_continuous(limits = c(0, 40)) +
   coord_polar(start =0) +
   labs(x = "Month", y = "Averaged Extremes of Deep-Layer Bulk Shear [m/s]") +
+  theme_minimal() )
+```
+
+*Hour*
+```{r}
+DLBSByHour <- BigDays.sfdfT %>% 
+  group_by(Hour_UTC) %>%
+  summarize(avgDLBS = mean(maxBS_deep)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by Hour`
+```{r}
+ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
+  scale_y_continuous(limits = c(0, 40)) +
+  coord_polar(start =-0.2) +
+  labs(x = "Hour (UTC)", y = "Averaged Extremes of DLBS [m/s]") +
+  theme_minimal() )
+```
+
+*Year*
+```{r}
+DLBSByYear <- BigDays.sfdfT %>% 
+  group_by(Year) %>%
+  summarize(avgDLBS = mean(maxBS_deep)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by Year`
+```{r}
+ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
+  scale_y_continuous(limits = c(0, 40)) +
+  coord_polar(start =-0.2) +
+  labs(x = "Year", y = "Averaged Extremes of DLBS [m/s]") +
   theme_minimal() )
 ```
 
@@ -672,7 +765,7 @@ Conditional standardized residuals from the linear regression model. (A) Histogr
 
 *How does the model do compared to the actual values? *
 ```{r}
-predictDLBS <- predict(DLBS_m3)
+predictDLBS <- predict(DLBS_m8)
 BigDays.sfdfT$predDLBS <- predictDLBS
 
 cor(BigDays.sfdfT$maxBS_deep, predictDLBS)
@@ -681,21 +774,15 @@ This model explains 52% of the variation of DLBS.
 
 *Make a table of the model coefficients. *
 ```{r}
-DLBSmod_coefs <- summary(DLBS_m3)
+DLBSmod_coefs <- summary(DLBS_m8)
 xtable(DLBSmod_coefs$coefficients, digits = 3)
 ```
 
 *What are the confidence intervals for the model? *
 ```{r}
-confint(DLBS_m3)
+confint(DLBS_m8)
 ```
-                       2.5 %      97.5 %
-.sig01             1.8313278  5.06219390
-.sigma             5.8474468  6.44400817
-(Intercept)        4.4455958 20.67462225
-SSTgradient_10day  0.3768084  1.22510951
-NAO_10day         -0.9717611  0.03026507
-PNA_10day         -1.0492033 -0.30952118
+
 
 *Plot the observed vs Predicted values of DLBS*
 ```{r}
@@ -707,7 +794,7 @@ ggplot() +
              show.legend = TRUE,  
              stroke = 0, 
              alpha = 0.8) +
-      scale_colour_continuous(type = "viridis") +
+      scale_colour_continuous(type = "viridis", guide = guide_colorbar(reverse = TRUE)) +
   geom_abline(slope = 1, 
                   size = 1.25,
               col = "blue") + 
@@ -718,16 +805,19 @@ ggplot() +
 ```
 
 ##CAPE: 
+
+
+
 *What is the relationship between these variables and CAPE? *
 ```{r}
-CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CAPE = BigDays.sfdfT$maxCAPE)
+CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC), CAPE = BigDays.sfdfT$maxCAPE)
 
 
 corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
 
 ```{r}
-CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day , data = BigDays.sfdfT)
+CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Year + as.numeric(Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m1)
 hist(CAPE_m1$residuals)
 library(sm)
@@ -759,102 +849,119 @@ ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
   theme_minimal() )
 ```
 
+*Hour*
 ```{r}
-CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+CAPEByHour <- BigDays.sfdfT %>% 
+  group_by(Hour_UTC) %>%
+  summarize(avgCAPE = mean(maxCAPE)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by Hour`
+```{r}
+ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
+  scale_y_continuous(limits = c(0, 3000)) +
+  coord_polar(start =-0.2) +
+  labs(x = "Hour (UTC)", y = "Averaged Extremes of CAPE [J/kg]") +
+  theme_minimal() )
+```
+
+*Year*
+```{r}
+CAPEByYear <- BigDays.sfdfT %>% 
+  group_by(Year) %>%
+  summarize(avgCAPE = mean(maxCAPE)) 
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by Hour`
+```{r}
+ggplot(CAPEByYear, aes(x = as.factor(Year), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(CAPEByYear, aes(x = as.factor(Year), y = avgCAPE)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
+  scale_y_continuous(limits = c(0, 3000)) +
+  coord_polar(start =-0.2) +
+  labs(x = "Hour (UTC)", y = "Averaged Extremes of CAPE [J/kg]") +
+  theme_minimal() )
+```
+
+```{r}
+CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m2)
-ranef(CAPE_m2) #There is a strong seasonal variation in CAPE values. 
+ranef(CAPE_m2) 
 ```
 
 ```{r}
-CAPE_m3 <- lmer(maxCAPE ~ MJO_10day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m3 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Month + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m3)
-ranef(CAPE_m3) #There is a strong annual variation in CAPE values  
 ```
 
-
 ```{r}
-CAPE_m4 <- lmer(maxCAPE ~ SSTgradient_20day + avg_Nino3420day + NAO_20day + PNA_20day +  MJO_20day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m4 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m4)
-ranef(CAPE_m4)
 ```
 
 ```{r}
-CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_30day + avg_Nino3430day + NAO_30day + PNA_30day +  MJO_30day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + (1|Month), data = BigDays.sfdfT)
 summary(CAPE_m5)
-ranef(CAPE_m5)
 ```
 
 ```{r}
-CAPE_m6 <- lmer(maxCAPE ~ SSTgradient_5day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_5day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m6 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Month), data = BigDays.sfdfT)
 summary(CAPE_m6)
-ranef(CAPE_m6)
 ```
 
-Compare the effect size and t values between the 5, 10, 20, and 30 day climate influencers. Select the most important ones. 
-
 ```{r}
-CAPE_m7 <- lmer(maxCAPE ~ SSTgradient_20day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+CAPE_m7 <- lmer(maxCAPE ~ SSTgradient_10day + MJO_10day+ Lon+ (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m7)
-ranef(CAPE_m7) 
 ```
 
 ```{r}
-CAPE_m8 <- lmer(maxCAPE ~  SSTgradient_20day + PNA_5day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4,CAPE_m5,CAPE_m6,CAPE_m7)
+```
+
+Using the AIC value, Model 5 is the best. Even with 31 degrees of freedom...
+
+```{r}
+CAPE_model <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + Year + (1|Month), data = BigDays.sfdfT)
+summary(CAPE_model)
+```
+
+```{r}
+CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + Year + (1|Month), data = BigDays.sfdfT)
 summary(CAPE_m8)
-ranef(CAPE_m8) #There is a strong annual variation in CAPE values  
 ```
 
 ```{r}
-CAPE_m9<- lmer(maxCAPE ~ PNA_5day + MJO_10day + Lat +  Lon + (1|Mo) , data = BigDays.sfdfT)
-summary(CAPE_m9)
-ranef(CAPE_m9)
+AIC(CAPE_model, CAPE_m8)
 ```
 
+*Check the residuals of model of CAPE.*
 ```{r}
-CAPE_m10<- lmer(maxCAPE ~ PNA_5day + MJO_10day +  Lon + (1|Mo) , data = BigDays.sfdfT)
-summary(CAPE_m10)
-ranef(CAPE_m10)
-```
-
-```{r}
-CAPE_m11 <- lm(maxCAPE ~ SSTgradient_20day + avg_Nino345day +  MJO_10day, data = BigDays.sfdfT)
-summary(CAPE_m11)
-```
-
-```{r}
-CAPE_m12 <- lm(maxCAPE ~ Month + SSTgradient_20day + avg_Nino345day +  MJO_10day, data = BigDays.sfdfT)
-summary(CAPE_m12)
-```
-
-```{r}
-CAPE_m13 <- lm(maxCAPE ~ Month +  MJO_10day, data = BigDays.sfdfT)
-summary(CAPE_m13)
-```
-
-```{r}
-AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4,CAPE_m5,CAPE_m6,CAPE_m7,CAPE_m8, CAPE_m9,CAPE_m10,CAPE_m11, CAPE_m12, CAPE_m13)
-```
-Using AIC It would have me believe that model 7 is significantly better than all of the others. 
-
-Is there a relationship between SST 20 day and Nino5day or NAO5day? 
-
-```{r}
-cor(BigDays.sfdfT$SSTgradient_20day, BigDays.sfdfT$avg_Nino345day)
-# 0.08557304
-cor(BigDays.sfdfT$SSTgradient_20day, BigDays.sfdfT$NAO_5day)
-#0.0008885289
-```
-
-*Check the residuals of model 7 of CAPE.*
-```{r}
-plot(residuals(CAPE_m9)) 
+plot(residuals(CAPE_model)) 
 ```
 There is no relationship between the residuals.
 
 *Make a plot of the standardized residuals for the CAPE model*
 ```{r}
-CAPEmod.df <- fortify.merMod(model=CAPE_m9, data = getData(CAPE_m9), na.rm = TRUE)
-CAPEmod.df$predCAPE <- predict(CAPE_m9)
+CAPEmod.df <- fortify.merMod(model=CAPE_model, data = getData(CAPE_model), na.rm = TRUE)
+CAPEmod.df$predCAPE <- predict(CAPE_model)
 
 p1 <- ggplot(CAPEmod.df, aes(x = .scresid)) +
   geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
@@ -875,36 +982,28 @@ Conditional standardized residuals from the linear regression model. (A) Histogr
 
 *How does the model do compared to the actual values? *
 ```{r}
-predictCAPE <- predict(CAPE_m9)
+predictCAPE <- predict(CAPE_model)
 BigDays.sfdfT$predCAPE <- predictCAPE
 
 cor(BigDays.sfdfT$maxCAPE, predictCAPE)
 ```
-This model explains 58% of the variation of CAPE.
+This model explains 66% of the variation of CAPE.
 
 *Make a table of the model coefficients. *
 ```{r}
-CAPEmod_coefs <- summary(CAPE_m9)
-xtable(CAPEmod_coefs$coefficients**2, digits = 3)
+CAPEmod_coefs <- summary(CAPE_model)
+xtable(CAPEmod_coefs$coefficients, digits = 3)
 ```
 To read these, you must square them. For every unit increase in the SST gradient, CAPE increases by 24%. (Is that right?)
 
 *What are the confidence intervals for the model? *
 ```{r}
-confint(CAPE_m9)
+confint(CAPE_model)
 ```
-.sig01             542.000800 1271.4251290
-.sigma            1059.427473 1167.2740953
-(Intercept)       -665.887541 7065.7949915
-SSTgradient_20day -126.280940   36.3704786
-avg_Nino345day    -141.606635   81.1594236
-NAO_5day           -67.578103   95.5077051
-PNA_5day          -122.251447    0.3850595
-MJO_10day            1.496223   89.6079778
 
 *Plot the observed vs Predicted values of CAPE*
 ```{r}
-ggplot() +
+p <- ggplot() +
   geom_point(data = BigDays.sfdfT, 
              aes(x = maxCAPE, 
                  y = predCAPE, col = Mo), 
@@ -912,12 +1011,25 @@ ggplot() +
              show.legend = TRUE,  
              stroke = 0, 
              alpha = 0.8) +
-      scale_colour_continuous(type = "viridis") +
+      scale_colour_continuous(type = "viridis", guide = guide_colorbar(reverse = TRUE)) +
   geom_abline(slope = 1, 
                   size = 1.25,
               col = "blue") + 
   ylab("Estimated CAPE [J/kg]") + 
       xlab("Observed CAPE [J/kg]") +
       theme_minimal() + 
-      theme(text = element_text(size=15))
+      theme(text = element_text(size=15)) 
+
+#p+guides(fill = guide_legend(reverse = TRUE))
+
+p
+```
+
+*Why is there such distinction between the predictions and month?*
+```{r}
+BigDays.sfdfT %>%
+  group_by(Mo) %>%
+  summarize(minCAPE = min(maxCAPE),
+            maxCAPE = max(maxCAPE), 
+            difference = maxCAPE - minCAPE)
 ```
