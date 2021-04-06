@@ -3,6 +3,325 @@ title: "Junk Code"
 output: html_document
 ---
 
+
+
+
+*We will figure that out later. *
+```{r}
+CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_30day + avg_Nino3430day + NAO_30day + PNA_30day +  MJO_30day + Lat + Lon+ (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m5)
+ranef(CAPE_m5)
+```
+
+```{r}
+CAPE_m6 <- lmer(maxCAPE ~ SSTgradient_5day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_5day + Lat + Lon+ (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m6)
+ranef(CAPE_m6)
+```
+
+Compare the effect size and t values between the 5, 10, 20, and 30 day climate influencers. Select the most important ones. 
+
+```{r}
+CAPE_m7 <- lmer(maxCAPE ~ SSTgradient_5day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_10day + Lat + Lon+ (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m7)
+ranef(CAPE_m7) 
+```
+
+```{r}
+CAPE_m11 <- lmer(maxCAPE ~ SSTgradient_5day + avg_Nino345day + PNA_5day +  MJO_10day + Lon+ (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m11)
+```
+
+
+```{r}
+CAPE_m8 <- lmer(maxCAPE ~  SSTgradient_5day + avg_Nino3420day +  PNA_5day +  MJO_10day + Lon + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m8)
+ranef(CAPE_m8) 
+```
+
+
+
+```{r}
+CAPE_m9<- lmer(maxCAPE ~ SSTgradient_5day +  PNA_5day +  MJO_10day + Lon + (1|Mo), data = BigDays.sfdfT)
+summary(CAPE_m9)
+
+```
+
+```{r}
+CAPE_m10 <- lm(maxCAPE ~ SSTgradient_5day +  PNA_5day +  MJO_10day + Lon, data = BigDays.sfdfT)
+summary(CAPE_m10)
+```
+
+```{r}
+CAPE_m12 <- lm(maxCAPE ~ Month + SSTgradient_5day +  PNA_5day +  MJO_10day + Lon, data = BigDays.sfdfT)
+summary(CAPE_m12)
+```
+
+```{r}
+CAPE_m13 <- lm(maxCAPE ~ Month +  MJO_10day, data = BigDays.sfdfT)
+summary(CAPE_m13)
+```
+
+```{r}
+AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4,CAPE_m5,CAPE_m6,CAPE_m7,CAPE_m8, CAPE_m9,CAPE_m10,CAPE_m11, CAPE_m12, CAPE_m13)
+```
+Using AIC It would have me believe that model 7 is significantly better than all of the others. 
+
+Is there a relationship between SST 20 day and Nino5day or NAO5day? 
+
+```{r}
+cor(BigDays.sfdfT$SSTgradient_20day, BigDays.sfdfT$avg_Nino345day)
+# 0.08557304
+cor(BigDays.sfdfT$SSTgradient_20day, BigDays.sfdfT$NAO_5day)
+#0.0008885289
+```
+
+##SLBS: 
+*What is the relationship between these variables and SLBS? *
+```{r}
+SLBS_env <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, SLBS = BigDays.sfdfT$maxBS_shallow)
+
+
+corrplot.mixed(cor(SLBS_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
+```
+
+```{r}
+SLBS_m1 <- lm(maxBS_shallow ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+SLBS_m1 <- lmer(maxBS_shallow ~ SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m1)
+ranef(SLBS_m1) #There is a strong seasonal variation in SLBS values. 
+```
+
+```{r}
+m1 <- lm(maxBS_shallow ~ SSTgradient + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+SLBS_m2 <- lmer(maxBS_shallow ~ SSTgradient + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m2)
+ranef(SLBS_m2) 
+```
+
+Month is the only random effect. 
+```{r}
+SLBS_m3 <- lmer(maxBS_shallow ~ Year + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m3)
+ranef(SLBS_m3)
+```
+
+```{r}
+SLBS_m4 <- lmer(maxBS_shallow ~ Year + SSTgradient + NAO_10day + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m4)
+ranef(SLBS_m4)
+```
+
+```{r}
+SLBS_m5 <- lmer(maxBS_shallow ~ Year + SSTgradient + PNA_10day +  MJO_10day  + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m5)
+ranef(SLBS_m5)
+```
+
+*Model 5 is the best*
+```{r}
+AIC(SLBS_m1 ,SLBS_m2 ,SLBS_m3 ,SLBS_m4 ,SLBS_m5)
+```
+
+*Check the residuals of model 5 of SLBS.*
+```{r}
+plot(residuals(SLBS_m5)) 
+```
+There is no relationship between the residuals.
+
+*Make a plot of the standardized residuals for the SLBS model*
+```{r}
+SLBSmod.df <- fortify.merMod(model=SLBS_m5, data = getData(SLBS_m5))
+SLBSmod.df$predSLBS <- predict(SLBS_m5)
+
+p1 <- ggplot(SLBSmod.df, aes(x = .scresid)) +
+  geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
+  xlab("Standardized Residual") + ylab("Frequency") +
+  ggtitle("A") +
+  theme_minimal() + theme(text = element_text(size=25))
+
+p2 <- ggplot(SLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
+         geom_point(size = 2) +
+        # scale_x_log10() +
+         scale_color_discrete(name = "Month") +
+  xlab("SLBS [m/s]") + ylab("Standardized Residual") +
+  ggtitle("B") +
+  theme_minimal() + theme(text = element_text(size=26))
+grid.arrange(p1, p2, ncol = 2)
+```
+Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of SLBS. The pattern in B indicates that predictions for larger values of SLBS are less accurate. 
+
+*How does the model do compared to the actual values? *
+```{r}
+predictSLBS <- predict(SLBS_m5)
+BigDays.sfdfT$predSLBS <- predictSLBS
+
+cor(BigDays.sfdfT$maxBS_shallow, predictSLBS)
+```
+This model explains 56% of the variation of SLBS.
+
+*Make a table of the model coefficients. *
+```{r}
+SLBSmod_coefs <- summary(SLBS_m5)
+xtable(SLBSmod_coefs$coefficients, digits = 3)
+```
+
+*What are the confidence intervals for the model? *
+```{r}
+confint(SLBS_m5)
+```
+                 2.5 %      97.5 %
+.sig01         2.51850617   5.97403800
+.sigma         5.69509099   6.27483241
+(Intercept) -312.32914537 -88.86848600
+Year           0.04831678   0.15830651
+SSTgradient    0.18061139   0.96433173
+PNA_10day     -0.92237478  -0.20502250
+MJO_10day     -0.40658457   0.06419227
+
+*Plot the observed vs Predicted values of SLBS*
+```{r}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = maxBS_shallow, 
+                 y = predSLBS, col = Mo), 
+             size = 5, 
+             show.legend = TRUE,  
+             stroke = 0, 
+             alpha = 0.8) +
+      scale_colour_continuous(type = "viridis") +
+  geom_abline(slope = 1, 
+                  size = 1.25,
+              col = "blue") + 
+  ylab("Estimated SLBS [m/s]") + 
+      xlab("Observed SLBS [m/s]") +
+      theme_minimal() + 
+      theme(text = element_text(size=15))
+```
+
+
+#Still working:
+
+
+##CIN: 
+*What is the relationship between these variables and CIN? *
+```{r}
+CIN_env <- data.frame(AirTemperature = BigDays.sfdfT$avg_globalairtemp, SSTgradient = BigDays.sfdfT$SSTgradient, ElNino = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, CIN = BigDays.sfdfT$minCIN)
+
+
+corrplot.mixed(cor(CIN_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
+```
+
+```{r}
+hist(log(BigDays.sfdfT$minCIN*-1))
+hist((BigDays.sfdfT$minCIN)**2)
+hist(sqrt(BigDays.sfdfT$minCIN*-1))
+```
+
+Remove positive values of CIN. Then, get the absolute value of CIN. 
+```{r}
+sqrtCIN <- sqrt(BigDays.sfdfT$minCIN*-1)
+sqrtCIN[is.nan(sqrtCIN)] <- 0
+```
+
+```{r}
+CIN_m1 <- lmer(sqrtCIN~ Year + avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + (1|Mo), data = BigDays.sfdfT)
+summary(CIN_m1)
+ranef(CIN_m1) #There is a strong seasonal variation in CIN values. 
+```
+
+```{r}
+CIN_m2 <- lmer(sqrtCIN ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day  + (1|Year), data = BigDays.sfdfT)
+summary(CIN_m2)
+ranef(CIN_m2) #There is a strong annual variation in CIN values  
+```
+
+```{r}
+CIN_m3 <- glm(sqrtCIN ~ avg_globalairtemp + SSTgradient + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+summary(CIN_m3)
+
+```
+
+```{r}
+CIN_m4 <- glm(sqrtCIN ~ avg_globalairtemp + SSTgradient + PNA_10day +  MJO_10day, data = BigDays.sfdfT)
+summary(CIN_m4)
+
+```
+
+```{r}
+CIN_m5 <- glm(sqrtCIN ~ avg_globalairtemp + SSTgradient+ PNA_10day, data = BigDays.sfdfT)
+summary(CIN_m5)
+
+```
+
+```{r}
+CIN_m6 <- glm(sqrtCIN ~ avg_globalairtemp + SSTgradient, data = BigDays.sfdfT)
+summary(CIN_m6)
+
+```
+*Compute the AIC*
+```{r}
+AIC(CIN_m1, CIN_m2, CIN_m3, CIN_m4, CIN_m5, CIN_m6)
+```
+
+
+*Check the residuals of model 6 of CIN.*
+```{r}
+plot(residuals(CIN_m6)) 
+```
+
+*Make a plot of the standardized residuals for the CAPE model*
+```{r}
+CINmod.df <- BigDays.sfdfT
+CINmod.df$predCIN <- predict(CIN_m6)
+```
+
+*How does the model do compared to the actual values? *
+```{r}
+predictCIN <- predict(CIN_m6)
+BigDays.sfdfT$predCIN <- predictCIN
+
+cor(BigDays.sfdfT$minCIN, predictCIN*-1)
+```
+This model explains 18% of the variation of CIN.
+
+*Make a table of the model coefficients. *
+```{r}
+CINmod_coefs <- summary(CIN_m6)
+xtable(CINmod_coefs$coefficients**2, digits = 3)
+```
+
+For every one unit increase in the SST gradient, CIN decreases by ~48 J/kg [-85, -10, 95%]. In lay person terms: A larger temperature gradient between Caribbean waters and Gulf of Alaska waters lead to less CIN. 
+
+*What are the confidence intervals for the model? *
+```{r}
+confint(CIN_m6)
+```
+                 2.5 %      97.5 %
+(Intercept)       -2.3358905 3.9168863
+avg_globalairtemp  0.2970740 3.2971301
+SSTgradient        0.2777191 0.5860674
+
+*Plot the observed vs Predicted values of CIN*
+```{r}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = minCIN, 
+                 y = (predCIN**2)*-1, col = Mo), 
+             size = 5, 
+             show.legend = TRUE,  
+             stroke = 0, 
+             alpha = 0.8) +
+      scale_colour_continuous(type = "viridis") +
+  geom_abline(slope = 1, 
+                  size = 1.25,
+              col = "blue") + 
+  ylab("Estimated CIN [J/kg]") + 
+      xlab("Observed CIN [J/kg]") +
+      theme_minimal() + 
+      theme(text = element_text(size=15))
+```
+
 *Load the package libraries needed for this research: *
 ```{r}
 suppressMessages(library(dplyr))
