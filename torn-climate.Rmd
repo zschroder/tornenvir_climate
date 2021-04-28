@@ -52,6 +52,7 @@ library(xtable)
 library(lme4)
 library(gridExtra)
 library(corrplot)
+library(sp)
 ```
 
 *Set the coordinate reference system to WGS84*
@@ -148,97 +149,77 @@ dim(x)[1]
 #90 clusters have at least 50 casualties
 ```
 
-## Preliminary figures of the Environmental Data ##
+Figure: Example of clusters
 
-*Compute the yearly averages and yearly anomalies. *
 ```{r}
-timeseries_env <- as.data.frame(BigDays.sfdfT) %>%
-  group_by(Year) %>%
-  summarize(yravgCAPE = mean(maxCAPE),
-            yravgCIN = mean(minCIN),
-            yravgDLBS = mean(maxBS_deep),
-            yravgSLBS = mean(maxBS_shallow))
-
-anom_CAPE = mean(timeseries_env$yravgCAPE)
-anom_CIN = mean(timeseries_env$yravgCIN)
-anom_DLBS = mean(timeseries_env$yravgDLBS)
-anom_SLBS = mean(timeseries_env$yravgSLBS)
-
-timeseries_env <- timeseries_env %>%
-  mutate(anomCAPE = yravgCAPE - anom_CAPE,
-         anomCIN = yravgCIN - anom_CIN,
-         anomDLBS = yravgDLBS - anom_DLBS,
-         anomSLBS = yravgSLBS - anom_SLBS,
-         posCAPE = anomCAPE >= 0,
-         posCIN = anomCIN >= 0,
-         posDLBS = anomDLBS >= 0,
-         posSLBS = anomSLBS >= 0)
+sts <- state.name[!state.name %in% c("Alaska", "Hawaii")]
+stateBorders <- us_states(states = sts)
 ```
 
-#Anomaly Figures for CAPE, CIN, DLBS, and SLBS. 
 
-**The Anomalies**
+May 20, 2019
+ID: 201905206481
 
-Graph of yearly anomaly of maximum CAPE.
 ```{r}
-yearCAPEgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCAPE)) +
-  geom_bar(stat = "identity", aes(fill = posCAPE)) +
-  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  geom_label(label = paste("Average:", round(anom_CAPE, digits = 2), paste0('J/kg')), x = 1998, y = -600) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Anomalies of Extreme CAPE (in Clusters)")
+May20 <- BigDays.sfdfT %>%
+  filter(cDate == "2019-05-20", groupNumber == 6481)
+May20 <- st_convex_hull(May20)
 
-yearCAPEgraph <- yearCAPEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
+May20centroid <- BigDayCentroids.df %>%
+  filter(cDate == "2019-05-20", groupNumber == 6481)
+
+May20tornadoes <- BigDayTornadoes %>% 
+  filter(cDate == "2019-05-20", groupNumber == May20centroid$groupNumber)
+
+May20tornadoes <- May20tornadoes %>%
+  mutate(Hour2 = ifelse(Hour <= 6, Hour + 24, Hour))
 ```
 
-Graph of yearly anomaly of minimum CIN.
+**Make a map of the May 20 tornado day. Obtain the state and county boundaries from the `USAboundaries` package. **
 ```{r}
-yearCINgraph <- ggplot(timeseries_env, aes(x = Year, y = anomCIN)) +
-  geom_bar(stat = "identity", aes(fill = posCIN)) +
-  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-    geom_label(label = paste("Average:", round(anom_CIN, digits = 2), paste0('J/kg')), x = 1998, y = -50) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Anomalies of Extreme CIN (in Clusters)")
+May20tornadoes$Hour2 <- cut(May20tornadoes$Hour2, breaks=c(6,12,18,24,30))
 
-yearCINgraph <- yearCINgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-```
+May2019 <- (tm_shape(stateBorders) + 
+  tm_borders(col = "gray70", alpha = 1) +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") +       
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("left", "bottom"), 
+            inner.margins = c(.15, .15, .15, .15)) +
+#tm_shape(counties.sf) +
+#  tm_borders(col = "gray40", alpha = .3) +
+#  tm_scale_bar(width = 8, size = 8, color.dark = "gray70") +
+  #tm_format("World", legend.position = c("right", "top"),
+#                   attr.position = c("right", "top"),
+#                   legend.frame = FALSE,
+                   #title = "May 30th Tornado Group",
+                   #title.size = 1.3,
+                   #title.position = c("left", "TOP"),
+ #                  inner.margins = c(.2, .2, .2, .2)) +
+tm_shape(May20, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") +
+  tm_borders(col = "black", lwd = 3) +
+tm_shape(May20tornadoes) +
+  tm_symbols(size = 4, col = "Hour2", alpha = 0.8, palette = "BuPu", title.col = "Time [CST]", labels = c("6 to 12", "12 to 18", "18 to 24", "0 to 6"), border.alpha = 0) +
+    tm_layout(legend.title.size = 1.1,
+            legend.position = c("right", "bottom"), 
+            legend.stack = "horizontal",
+            legend.frame = FALSE, 
+            legend.text.size = 1, legend.width = -0.2) +
+tm_shape(May20centroid) +
+  tm_symbols(size = 1.25, col = "black", shape = 24)  +
+  tm_layout(title = "May 20, 2019 \n 49 tornadoes", 
+              title.position = c("center", "top"), 
+              legend.title.size = 1.4,
+              legend.position = c("right", "bottom"), 
+              legend.stack = "horizontal",
+              legend.frame = FALSE, 
+              legend.text.size = 1.2, 
+              legend.width = -0.2, 
+              title.size = 1.5)
+)
 
-Graph of yearly anomaly of maximum DLBS.
-```{r}
-
-yearDLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomDLBS)) +
-  geom_bar(stat = "identity", aes(fill = posDLBS)) +
-  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  geom_label(label = paste("Average:", round(anom_DLBS, digits = 2), paste0('m/s')), x = 1998, y = 3) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Anomalies of Extreme DLBS (in Clusters)")
-
-yearDLBSgraph <- yearDLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-```
-
-Graph of yearly anomaly of maximum SLBS.
-```{r}
-yearSLBSgraph <- ggplot(timeseries_env, aes(x = Year, y = anomSLBS)) +
-  geom_bar(stat = "identity", aes(fill = posSLBS)) +
-  scale_fill_manual(values = c("red2", "blue2"), guide = FALSE) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  geom_label(label = paste("Average:", round(anom_SLBS, digits = 2), paste0('m/s')), x = 1998, y = 3.15) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Anomalies of Extreme SLBS (in Clusters)")
-
-yearSLBSgraph <- yearSLBSgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-```
-
-```{r}
-#library(ggpubr)
-ggarrange(yearCAPEgraph, yearCINgraph, yearDLBSgraph, yearSLBSgraph)
+May2019
 ```
 
 ```{r}
@@ -257,173 +238,127 @@ mean(BigDays.sfdfT$minCIN)
 mean(BigDays.sfdfT$maxBS_deep)
 mean(BigDays.sfdfT$maxBS_shallow)
 ```
-
-#Look at the annual trends in climate variables. 
-*Yearly trends in climate variables*
+*Plot the CAPE, HLCY, and CIN for the May 20, 2019 Big Day. First, read in the raster. *
 ```{r}
-library(dplyr)
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxmonthlySIE = max(monthlySIE))
-
-monthlySIEgraph <- ggplot(x, (aes(x = Year, y = maxmonthlySIE))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "red", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(14, 16), breaks = c(seq(14,16,0.25))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Maximum Monthly Sea Ice Extent [millions of square km]")
-
-monthlySIEgraph <- monthlySIEgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-monthlySIEgraph
+library(raster)
+ rb <- brick(paste0("/Users/lordofmornin/Desktop/Projects/tornenvir_climate/merged_AWIP32.20190520/merged_AWIP32.2019052018")) #<-- this is for varying NARR times
+  CAPE <- raster(rb, layer = 375)
+  HLCY <- raster(rb, layer = 323)
+  CIN <- raster(rb, layer = 376)
+  UGRD500 <- raster(rb, layer = 117) 
+  VGRD500 <- raster(rb, layer = 118) 
+  UGRD850 <- raster(rb, layer = 206) 
+  VGRD850 <- raster(rb, layer = 207)
+  UGRDsfc <- raster(rb, layer = 293) 
+  VGRDsfc <- raster(rb, layer = 294)     
+  DLBS <- sqrt(((UGRD500 - UGRDsfc)**2) + ((VGRD500 - VGRDsfc)**2))
+  SLBS <- sqrt(((UGRD850 - UGRDsfc)**2) + ((VGRD850 - VGRDsfc)**2))
+```
+**Convective Available Potential energy **
+```{r}
+#CAPE = projectRaster(CAPE, crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
+May20 <- st_transform(May20, 
+  crs = "+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 ```
 
 ```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxairtemp = max(avg_globalairtemp))
+CAPE_May20 <- crop(CAPE, extent(May20))
+CAPE_extent<- mask(CAPE_May20, May20)
+plot(CAPE_extent)
 
-airtempgraph <- ggplot(x, (aes(x = Year, y = maxairtemp))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(0,1), breaks = c(seq(0,1,0.25))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Monthly Maximum Air Temperature Anomalies")
+maxCAPE <- which.max(CAPE_extent) #Returns a pixel number
 
-airtempgraph <- airtempgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-airtempgraph
+#Test that this max value equals the one in BigDays.sfdfT
+test <- getValues(CAPE_extent) 
+test<-as.matrix(test, ncol=1)
 ```
 
 ```{r}
-ggarrange(monthlySIEgraph, airtempgraph, ncol = 2, nrow = 1)
+CAPEmaxpos <- xyFromCell(CAPE_extent, maxCAPE)
+
+xy <- data.frame(CAPEmaxpos)
+CAPE_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(CAPE_latlon)
+
+CAPE_latlon <- SpatialPoints(CAPE_latlon)
+proj4string(CAPE_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 ```
 
 ```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxCSST = max(avg_CSST10day))
+counties <- us_counties()
+states <- us_states()
+```
 
-CSSTgraph <- ggplot(x, (aes(x = Year, y = maxCSST))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(28.6,30), breaks = c(seq(28.6,30,.2))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Maximum 10-day average CSST [degrees C]")
+```{r, eval = FALSE}
+p1 <- tm_shape(CAPE_extent) +
+  tm_raster(title = "",  n = 6, palette = "BuPu") +
+  tm_format(title = expression(paste("CAPE [J ", kg^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.1, 0.1, .15, .1), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.28, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+  #tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May20, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(CAPE_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p1
+```
 
-CSSTgraph <- CSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-CSSTgraph
+**Bulk Shear**
+```{r}
+BS_May20 <- crop(BS, extent(May20))
+BS_extent<- mask(BS_May20, May20)
+plot(BS_extent)
+
+maxBS <- which.max(BS_extent)
 ```
 
 ```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxGAKSST = max(avg_GAKSST10day))
+BSmaxpos <- xyFromCell(BS_extent, maxBS)
 
-GAKSSTgraph <- ggplot(x, (aes(x = Year, y = maxGAKSST))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(10,15), breaks = c(seq(10,15,.5))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Maximum 10-day average GAKSST [degrees C]")
+xy <- data.frame(BSmaxpos)
+BS_latlon <- data.frame(lon=xy$x, lat=xy$y)
+print(BS_latlon)
 
-GAKSSTgraph <- GAKSSTgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-GAKSSTgraph
+BS_latlon <- SpatialPoints(BS_latlon)
+proj4string(BS_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 ```
 
-El Nino 10 day average
+```{r, eval = FALSE}
+p4 <- tm_shape(BS_extent) +
+  tm_raster(title = "", n = 5, palette = "BuPu") +
+  tm_format(title = expression(paste("Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "bottom"),
+                   legend.frame = FALSE,
+                   inner.margins = c(.1, 0.1, .15, .1), #bottom, left, top
+                    legend.text.size = 1, legend.width = -0.2, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
+#tm_shape(counties) +
+#  tm_borders(col = "grey") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+tm_shape(states) +
+  tm_borders() +
+tm_shape(May20, is.master = TRUE, projection = merc) +
+  tm_borders(col = "black", lwd = 3)  +
+#tm_shape(May6centroid) +
+#  tm_symbols(size = 1.25, col = "black", shape = 24) +
+tm_shape(BS_latlon) + 
+  tm_symbols(size = 1.4, col = "black", shape = 22)
+p4
+```
+
+**Combine into one figure: **
 ```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxNino = max(avg_Nino3410day))
-
-Ninograph <- ggplot(x, (aes(x = Year, y = maxNino))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(27, 30), breaks = c(seq(27,30,0.5))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Maximum 10-day average El Nino 3.4")
-
-Ninograph <- Ninograph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-Ninograph
+tmap_arrange(p1, p4, ncol = 2, nrow = 1)
 ```
 
-NAO 10 day average
-```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxNAO = max(NAO_10day))
-
-NAOgraph <- ggplot(x, (aes(x = Year, y = maxNAO))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "blue", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(0.5, 3), breaks = c(seq(0.5,3,0.5))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab("Maximum 10-day average NAO")
-
-NAOgraph <- NAOgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-NAOgraph
-```
-
-MJO 10 day average
-```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxMJO = max(MJO_10day))
-
-MJOgraph <- ggplot(x, (aes(x = Year, y = maxMJO))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "red", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(6, 8), breaks = c(seq(6,8,0.5))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab(" Maximum 10-day average MJO")
-
-MJOgraph <- MJOgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-MJOgraph
-```
-
-PNA 10 day average
-```{r}
-x <-  BigDays.sfdfT %>%
-  group_by(Year) %>%
-  summarize(maxPNA = max(PNA_10day))
-
-PNAgraph <- ggplot(x, (aes(x = Year, y = maxPNA))) +
- geom_smooth(method = lm, span = .5, se = FALSE, color = "red", size = 1) +
-  geom_line(color = "black", lwd = 1) +
-  scale_x_continuous(expand = c(0, 0), breaks = c(seq(1994,2020,1))) +
-  scale_y_continuous(limits = c(0.5, 4), breaks = c(seq(0.5,4,0.5))) + 
-#  geom_smooth(aes(x = week, y = probs/100), span = .5, se = FALSE, color = "gray70", size = 1) +
-  theme_bw() +
-  xlab("Year") +
-  ylab(" Maximum 10-day average PNA")
-
-PNAgraph <- PNAgraph + theme(axis.title.y = element_text(colour = "black"), axis.text.y = element_text(color = "black"),  axis.text.x = element_text(angle = 45, hjust = 1), axis.text = element_text(size = 12), axis.title=element_text(size=14))
-PNAgraph
-```
-
-```{r}
-ggarrange(CSSTgraph, GAKSSTgraph, Ninograph, NAOgraph, MJOgraph, PNAgraph, ncol = 2, nrow = 3)
-```
+# Climate variables. 
 
 ```{r}
 max(BigDays.sfdfT$max_CSST)
@@ -448,6 +383,224 @@ mean(BigDays.sfdfT$PNA_daily)
 mean(BigDays.sfdfT$MJO_daily)
 ```
 
+```{r}
+CSST_xcoord <- c(-90, -70, -70, -90)
+CSST_ycoord <- c(15, 15, 25, 25)
+xym <- cbind(CSST_xcoord, CSST_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+CSST_sp = SpatialPolygons(list(ps))
+plot(CSST_sp)
+
+GAKSST_xcoord <- c(-157.5,-133.1,-133.1,-157.5)
+GAKSST_ycoord <- c(50.5, 50.5, 60, 60)
+xym <- cbind(GAKSST_xcoord, GAKSST_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+GAKSST_sp = SpatialPolygons(list(ps))
+plot(GAKSST_sp)
+
+NINO_xcoord <- c(-170, -120, -120, -170)
+NINO_ycoord <- c(-5, -5, 5, 5)
+xym <- cbind(NINO_xcoord, NINO_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+NINO_sp = SpatialPolygons(list(ps))
+plot(NINO_sp)
+
+MyBorders_x <- c(-180, -60, -60, -180)
+MyBorders_y <- c(-10, -10, 70, 70)
+xym <- cbind(MyBorders_x, MyBorders_y)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+MyBorders_sp = SpatialPolygons(list(ps))
+plot(MyBorders_sp)
+```
+
+```{r}
+data("World")
+
+West_Hemisphere <- World %>%
+  filter(continent %in% c("North America", "South America"))
+
+tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "gray70", alpha = 1) +
+ tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(alpha = 0, border.alpha = 0)+ 
+tm_shape(CSST_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "blue", alpha = 0.6)+
+tm_shape(GAKSST_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "darkgreen", alpha = 0.6, legend.show = TRUE)+
+tm_shape(NINO_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "goldenrod2", alpha = 0.6, legend.show = TRUE) +
+tm_shape(stateBorders) + 
+  tm_borders(col = "gray40", alpha = 1) +
+  tm_compass(size = 2, fontsize = 1, lwd = 2, color.dark = "gray70") +       
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_add_legend(type = "symbol", labels = c("Caribbean SST Zone", "Gulf of Alaska SST Zone", "Nino 3.4 SST Zone"), col = c("blue", "darkgreen", "goldenrod2"), size = 2, shape = 22, alpha = 0.6) +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("left", "bottom"),
+            legend.position = c("right", "bottom"),
+            legend.stack = "horizontal",
+            inner.margins = c(0.15,0.05,0,0))
+```
+
+NAO locations: 
+```{r}
+NAO_xcoord <- c(-70, -10, -10, -70)
+NAO_ycoord <- c(55, 55, 70, 70)
+xym <- cbind(NAO_xcoord, NAO_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+NAO_sp = SpatialPolygons(list(ps))
+plot(NAO_sp)
+
+NAO2_xcoord <- c(-70,-10,-10,-70)
+NAO2_ycoord <- c(35, 35, 45, 45)
+xym <- cbind(NAO2_xcoord, NAO2_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+NAO2_sp = SpatialPolygons(list(ps))
+plot(NAO2_sp)
+
+
+MyBorders_x <- c(-80, -5, -5, -80)
+MyBorders_y <- c(30, 30, 75, 75)
+xym <- cbind(MyBorders_x, MyBorders_y)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+MyBorders_sp = SpatialPolygons(list(ps))
+plot(MyBorders_sp)
+```
+
+```{r}
+data("World")
+
+West_Hemisphere <- World %>%
+  filter(continent %in% c("North America", "South America"))
+
+tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "gray70", alpha = 1) +
+ tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(alpha = 0, border.alpha = 0)+ 
+tm_shape(NAO_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "blue", alpha = 0.6)+
+tm_shape(NAO2_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "darkgreen", alpha = 0.6, legend.show = TRUE)+
+tm_shape(stateBorders) + 
+  tm_borders(col = "gray40", alpha = 1) +
+  tm_compass(size = 2, fontsize = 1, lwd = 2, color.dark = "gray70", bg.color = "white") +       
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70", bg.color = "white") +
+  tm_add_legend(type = "symbol", labels = c("Icelandic Low", "Azores High"), col = c("blue", "darkgreen"), size = 2, shape = 22, alpha = 0.6) +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("right", "bottom"),
+            legend.position = c("left", "bottom"),
+            legend.stack = "horizontal",
+            inner.margins = c(0.15,0.05,0,0))
+```
+
+PNA Locations: 
+
+```{r}
+PNA_xcoord <- c(-180, -140, -140, -180)
+PNA_ycoord <- c(15, 15, 25, 25)
+xym <- cbind(PNA_xcoord, PNA_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+PNA_sp = SpatialPolygons(list(ps))
+plot(PNA_sp)
+
+PNA2_xcoord <- c(-180, -140, -140, -180)
+PNA2_ycoord <- c(40, 40, 50, 50)
+xym <- cbind(PNA2_xcoord, PNA2_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+PNA2_sp = SpatialPolygons(list(ps))
+plot(PNA2_sp)
+
+PNA3_xcoord <- c(-90, -70, -70, -90)
+PNA3_ycoord <- c(25, 25, 35, 35)
+xym <- cbind(PNA3_xcoord, PNA3_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+PNA3_sp = SpatialPolygons(list(ps))
+plot(PNA3_sp)
+
+PNA4_xcoord <- c(-125, -105, -105, -125)
+PNA4_ycoord <- c(45, 45, 60, 60)
+xym <- cbind(PNA4_xcoord, PNA4_ycoord)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+PNA4_sp = SpatialPolygons(list(ps))
+plot(PNA4_sp)
+
+
+
+MyBorders_x <- c(-180, -65, -65, -180)
+MyBorders_y <- c(10, 10, 65, 65)
+xym <- cbind(MyBorders_x, MyBorders_y)
+
+p = Polygon(xym)
+ps = Polygons(list(p),1)
+MyBorders_sp = SpatialPolygons(list(ps))
+plot(MyBorders_sp)
+```
+
+```{r}
+data("World")
+
+West_Hemisphere <- World %>%
+  filter(continent %in% c("North America", "South America"))
+
+tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "gray70", alpha = 1) +
+ tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(alpha = 0, border.alpha = 0)+ 
+tm_shape(PNA_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "maroon1", alpha = 0.6)+
+tm_shape(PNA2_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "maroon1", alpha = 0.6, legend.show = TRUE)+
+tm_shape(PNA3_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "goldenrod2", alpha = 0.7, legend.show = TRUE)+
+  tm_shape(PNA4_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+  tm_polygons(col = "goldenrod2", alpha = 0.7, legend.show = TRUE)+
+tm_shape(stateBorders) + 
+  tm_borders(col = "gray40", alpha = 1) +
+  tm_compass(size = 1.5, fontsize = 1, lwd = 2, color.dark = "gray70") +       
+  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
+  tm_add_legend(type = "symbol", labels = c("Pacific Height Regions", "North American Height Regions"), col = c("maroon1", "goldenrod2"), size = 2, shape = 22, alpha = 0.7) +
+  tm_layout(legend.bg.color = "white", 
+            legend.text.size = .75, 
+            attr.position = c("left", "bottom"),
+            legend.position = c("right", "bottom"),
+            legend.stack = "horizontal",
+            inner.margins = c(0.220,0.05,0,0))
+```
+
+```{r}
+#% DLBS < mean 
+(dim(BigDays.sfdfT %>% filter(maxBS_deep <= mean(maxBS_deep)))[1] / dim(BigDays.sfdfT)[1]) *100
+
+#%SLBS < mean
+(dim(BigDays.sfdfT %>% filter(maxBS_shallow <= mean(maxBS_shallow)))[1] / dim(BigDays.sfdfT)[1]) *100
+
+#% CAPE < mean
+(dim(BigDays.sfdfT %>% filter(maxCAPE <= mean(maxCAPE)))[1] / dim(BigDays.sfdfT)[1]) *100
+```
+
 
 #The Models: 
 
@@ -467,7 +620,7 @@ plot_CAPE <- ggplot(BigDays.sfdfT, aes(maxCAPE)) +
   xlab("Maximum CAPE [J/kg]") +
   scale_y_continuous(expand = c(0,0), breaks = c(0, 10,20,30,40,50), labels = c("0", "10", "20", "30", "40", "50"), limits = c(0, 50)) +
   ylab("Number of Clusters") + 
-  ggtitle("A") +
+  ggtitle("c") +
   theme_bw() +
   theme(text = element_text(size=12), plot.background = element_rect(color = "grey40"), panel.border = element_rect(color = "white"), plot.margin=unit(c(0.5, 0.5, 0.5, 0.5),"cm"))
 ```
@@ -486,7 +639,7 @@ plot_DLBS <- ggplot(BigDays.sfdfT, aes(maxBS_deep)) +
   xlab("Maximum Deep Layer Bulk Shear [m/s]") +
   scale_y_continuous(expand = c(0,0), breaks = c(0, 10,20,30,40,50, 60), labels = c("0", "10", "20", "30", "40", "50", "60"), limits = c(0, 60)) +
   ylab("Number of Clusters") + 
-  ggtitle("C") +
+  ggtitle("a") +
   theme_bw() +
   theme(text = element_text(size=12), plot.background = element_rect(color = "grey40"), panel.border = element_rect(color = "white"), plot.margin=unit(c(0.5, 0.5, 0.5, 0.5),"cm"))
 ```
@@ -505,38 +658,18 @@ plot_SLBS <- ggplot(BigDays.sfdfT, aes(maxBS_shallow)) +
   xlab("Maximum Shallow Layer Bulk Shear [m/s]") +
   scale_y_continuous(expand = c(0,0), breaks = c(0, 10,20,30,40,50), labels = c("0", "10", "20", "30", "40", "50"), limits = c(0, 50)) +
   ylab("Number of Clusters") + 
-  ggtitle("D") +
+  ggtitle("b") +
   theme_bw() +
   theme(text = element_text(size=12), plot.background = element_rect(color = "grey40"), panel.border = element_rect(color = "white"), plot.margin=unit(c(0.5, 0.5, 0.5, 0.5),"cm"))
 ```
 
-`CIN`
 ```{r}
-plot_CIN <- ggplot(BigDays.sfdfT, aes(minCIN)) + 
-  geom_histogram(boundary = 50, 
-                 bins = 43, 
-                 alpha = 0.9, 
-                 color = "white", 
-                 fill = "Grey40",
-                 size = 0.1) +
-  scale_x_continuous(expand = c(0,0), limits = c(-700,50)) +
-  #scale_x_log10() + 
-  xlab("Minimum CIN [J/kg]") +
-  scale_y_continuous(expand = c(0,0), breaks = c(0, 20,40,60,80,100), labels = c("0", "20", "40", "60", "80", "100"), limits = c(0, 100)) +
-  ylab("Number of Clusters") + 
-  ggtitle("B") +
-  theme_bw() +
-  theme(text = element_text(size=12), plot.background = element_rect(color = "grey40"), panel.border = element_rect(color = "white"), plot.margin=unit(c(0.5, 0.5, 0.5, 0.5),"cm"))
-```
-
-*Combine the distributions into a single figure.*
-```{r}
-ggarrange(plot_CAPE, plot_CIN, plot_DLBS, plot_SLBS, ncol = 2, nrow = 2)
+ggarrange(plot_DLBS, plot_SLBS, plot_CAPE, ncol = 1, nrow = 3)
 ```
 
 *What is the correlation between the climate variables? *
 ```{r}
-ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day,Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
+ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
 ```
 
 *Create a figure to show correlations between the climate variables. *
@@ -579,21 +712,13 @@ mean(BigDays.sfdfT$SSTgradient_10day)
 
 *Now let's look at the correlation matrix again: *
 ```{r}
-ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
+ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
 
 corrplot.mixed(cor(ClimVars2), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
 
-There is a significant correlation of 0.83 between the SSTgradient and ArcticSIE. `SIE is the monthly Sea Ice Index which provides a quick look at Arctic-wide changes in sea ice. It is a source for consistently processed ice extent and concentration images and data values since 1979.`
 
 This relationship indicates that the stronger the gradient in SST between the Caribbean and the Gulf of Alaska the more Arctic Sea Ice. The large correlation between these two climate variables will cause a collinearity issue in our models. As a result, one of these variables should be removed. I remove the ArcticSIE variable because it makes less physical sense. The SST gradient implies a larger magnitude of Rossby waves that can influence intense convection across the United States. 
-
-```{r}
-ClimVars3 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC))
-
-
-corrplot.mixed(cor(ClimVars3), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
-```
 
 All collinearity issues have been removed. 
 
@@ -614,7 +739,8 @@ summary(DLBS_m1)
 ```{r}
 DLBSByMonth <- BigDays.sfdfT %>% 
   group_by(Mo) %>%
-  summarize(avgDLBS = mean(maxBS_deep)) 
+  summarize(nC = n(),
+            avgDLBS = mean(maxBS_deep)/nC) 
 ```
 
 `Make a figure of the Mean DLBS from 1994 to 2020 by month`
@@ -630,9 +756,9 @@ ggplot(DLBSByMonth, aes(x = as.factor(Mo), y = avgDLBS)) +
 ( p0 <- ggplot(DLBSByMonth, aes(x = Mo, y = avgDLBS)) +
   geom_bar(stat = "identity", fill = "gray70") +
  scale_x_continuous(breaks = seq(1, 12, 1), labels = month.abb) +
-  scale_y_continuous(limits = c(0, 40)) +
+  scale_y_continuous(limits = c(0, 2)) +
   coord_polar(start =0) +
-  labs(x = "Month", y = "Averaged Extremes of Deep-Layer Bulk Shear [m/s]") +
+  labs(x = "Month", y = "Normalized Average Extremes of Deep-Layer Bulk Shear [m/s]") +
   theme_minimal() )
 ```
 
@@ -640,7 +766,8 @@ ggplot(DLBSByMonth, aes(x = as.factor(Mo), y = avgDLBS)) +
 ```{r}
 DLBSByHour <- BigDays.sfdfT %>% 
   group_by(Hour_UTC) %>%
-  summarize(avgDLBS = mean(maxBS_deep)) 
+  summarize(nC = n(),
+            avgDLBS = mean(maxBS_deep))
 ```
 
 `Make a figure of the total tornadoes from 1994 to 2018 by Hour`
@@ -653,14 +780,19 @@ ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p0 <- ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
+( p1 <- ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
   geom_bar(stat = "identity", fill = "gray70") +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
   scale_y_continuous(limits = c(0, 40)) +
   coord_polar(start =-0.2) +
-  labs(x = "Hour (UTC)", y = "Averaged Extremes of DLBS [m/s]") +
+  labs(x = "Hour (UTC)", y = "Average Extremes of Deep-Layer Bulk Shear [m/s]") +
   theme_minimal() )
 ```
+
+```{r}
+ggarrange(p0, p1)
+```
+
 
 *Year*
 ```{r}
@@ -730,12 +862,12 @@ summary(DLBS_m8)
 ranef(DLBS_m8)
 ```
 
-*Model 3 is the best*
+*Model 8 is the best*
 ```{r}
 AIC(DLBS_m1, DLBS_m2, DLBS_m3, DLBS_m4, DLBS_m5, DLBS_m6, DLBS_m7, DLBS_m8)
 ```
 
-*Check the residuals of model 3 of DLBS.*
+*Check the residuals of model 8 of DLBS.*
 ```{r}
 plot(residuals(DLBS_m8)) 
 ```
@@ -750,7 +882,7 @@ p1 <- ggplot(DLBSmod.df, aes(x = .scresid)) +
   geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
   xlab("Standardized Residual") + ylab("Frequency") +
   ggtitle("A") +
-  theme_minimal() + theme(text = element_text(size=25))
+  theme_minimal() + theme(text = element_text(size=15))
 
 p2 <- ggplot(DLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
          geom_point(size = 2) +
@@ -758,7 +890,7 @@ p2 <- ggplot(DLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
          scale_color_discrete(name = "Month") +
   xlab("DLBS [m/s]") + ylab("Standardized Residual") +
   ggtitle("B") +
-  theme_minimal() + theme(text = element_text(size=26))
+  theme_minimal() + theme(text = element_text(size=15))
 grid.arrange(p1, p2, ncol = 2)
 ```
 Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of DLBS. The pattern in B indicates that predictions for larger values of DLBS are less accurate. 
@@ -783,7 +915,6 @@ xtable(DLBSmod_coefs$coefficients, digits = 3)
 confint(DLBS_m8)
 ```
 
-
 *Plot the observed vs Predicted values of DLBS*
 ```{r}
 ggplot() +
@@ -804,6 +935,65 @@ ggplot() +
       theme(text = element_text(size=15))
 ```
 
+##SLBS:
+
+```{r}
+SLBSByMonth <- BigDays.sfdfT %>% 
+  group_by(Mo) %>%
+  summarize(nC = n(),
+            avgSLBS = mean(maxBS_shallow)/nC) 
+```
+
+`Make a figure of the Mean SLBS from 1994 to 2020 by month`
+```{r}
+ggplot(SLBSByMonth, aes(x = as.factor(Mo), y = avgSLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p0 <- ggplot(SLBSByMonth, aes(x = Mo, y = avgSLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+ scale_x_continuous(breaks = seq(1, 12, 1), labels = month.abb) +
+  scale_y_continuous(limits = c(0, 1)) +
+  coord_polar(start =0) +
+  labs(x = "Month", y = "Normalized Average Extremes of Shallow-Layer Bulk Shear [m/s]") +
+  theme_minimal() )
+```
+
+*Hour*
+```{r}
+SLBSByHour <- BigDays.sfdfT %>% 
+  group_by(Hour_UTC) %>%
+  summarize(nC = n(),
+            avgSLBS = mean(maxBS_shallow))
+```
+
+`Make a figure of the total tornadoes from 1994 to 2018 by Hour`
+```{r}
+ggplot(SLBSByHour, aes(x = as.factor(Hour_UTC), y = avgSLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(labels = month.name) +
+  scale_y_continuous(limits = c(0, NA)) +
+  ylab("Number of Tornado Groups\nWith At Least 10 Tornadoes") + xlab("") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+( p1 <- ggplot(SLBSByHour, aes(x = as.factor(Hour_UTC), y = avgSLBS)) +
+  geom_bar(stat = "identity", fill = "gray70") +
+  #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
+  scale_y_continuous(limits = c(0, 30)) +
+  coord_polar(start =-0.2) +
+  labs(x = "Hour (UTC)", y = "Average Extremes of Shallow-Layer Bulk Shear [m/s]") +
+  theme_minimal() )
+```
+
+```{r}
+ggarrange(p0, p1)
+```
+
 ##CAPE: 
 
 
@@ -817,7 +1007,7 @@ corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1,
 ```
 
 ```{r}
-CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Year + as.numeric(Hour_UTC), data = BigDays.sfdfT)
+CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon, data = BigDays.sfdfT)
 summary(CAPE_m1)
 hist(CAPE_m1$residuals)
 library(sm)
@@ -827,7 +1017,8 @@ sm.density(CAPE_m1$residuals, model = "Normal")
 ```{r}
 CAPEByMonth <- BigDays.sfdfT %>% 
   group_by(Mo) %>%
-  summarize(avgCAPE = mean(maxCAPE)) 
+  summarize(nC = n(),
+            avgCAPE = mean(maxCAPE)/nC) 
 ```
 
 `Make a figure of the total tornadoes from 1994 to 2018 by month`
@@ -843,9 +1034,9 @@ ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
 ( p0 <- ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
   geom_bar(stat = "identity", fill = "gray70") +
  scale_x_discrete(breaks = seq(1, 12, 1), labels = month.abb) +
-  scale_y_continuous(limits = c(0, 4000)) +
+  scale_y_continuous(limits = c(0, 75)) +
   coord_polar(start =0) +
-  labs(x = "Month", y = "Averaged Extremes of CAPE [J/kg]") +
+  labs(x = "Month", y = "Normalized Average Extremes of CAPE [J/kg]") +
   theme_minimal() )
 ```
 
@@ -866,14 +1057,19 @@ ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p0 <- ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
+( p1 <- ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
   geom_bar(stat = "identity", fill = "gray70") +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
-  scale_y_continuous(limits = c(0, 3000)) +
+  scale_y_continuous(limits = c(0, 3500)) +
   coord_polar(start =-0.2) +
-  labs(x = "Hour (UTC)", y = "Averaged Extremes of CAPE [J/kg]") +
+  labs(x = "Hour (UTC)", y = "Average Extremes of CAPE [J/kg]") +
   theme_minimal() )
 ```
+
+```{r}
+ggarrange(p0, p1)
+```
+
 
 *Year*
 ```{r}
@@ -902,54 +1098,66 @@ ggplot(CAPEByYear, aes(x = as.factor(Year), y = avgCAPE)) +
 ```
 
 ```{r}
-CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + MJO_10day + Lon + (1|Month), data = BigDays.sfdfT)
+
 summary(CAPE_m2)
 ranef(CAPE_m2) 
 ```
 
 ```{r}
-CAPE_m3 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Month + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m3 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + MJO_10day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m3)
 ```
 
 ```{r}
-CAPE_m4 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m4 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + Lon + (1|MJO_10day) + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m4)
 ```
 
 ```{r}
-CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + (1|Month), data = BigDays.sfdfT)
+AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4)
+```
+
+```{r}
+CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_5day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m5)
 ```
 
 ```{r}
-CAPE_m6 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon+ (1|Month), data = BigDays.sfdfT)
+CAPE_m6 <- lmer(maxCAPE ~ SSTgradient_20day + avg_Nino3420day + NAO_20day + PNA_20day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m6)
 ```
 
 ```{r}
-CAPE_m7 <- lmer(maxCAPE ~ SSTgradient_10day + MJO_10day+ Lon+ (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m7 <- lmer(maxCAPE ~ SSTgradient_30day + avg_Nino3430day + NAO_30day + PNA_30day +  MJO_30day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m7)
 ```
 
 ```{r}
-AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4,CAPE_m5,CAPE_m6,CAPE_m7)
+CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+summary(CAPE_m8)
+```
+
+```{r}
+AIC(CAPE_m3,CAPE_m5,CAPE_m6,CAPE_m7, CAPE_m8)
 ```
 
 Using the AIC value, Model 5 is the best. Even with 31 degrees of freedom...
 
 ```{r}
-CAPE_model <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + Year + (1|Month), data = BigDays.sfdfT)
+CAPE_model <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_model)
 ```
 
 ```{r}
-CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_10day + PNA_10day +  MJO_10day + Lat + Lon + Hour_UTC + Year + (1|Month), data = BigDays.sfdfT)
+CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + Lat + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m8)
 ```
 
 ```{r}
 AIC(CAPE_model, CAPE_m8)
+
+CAPE_model <- CAPE_m8
 ```
 
 *Check the residuals of model of CAPE.*
@@ -967,7 +1175,7 @@ p1 <- ggplot(CAPEmod.df, aes(x = .scresid)) +
   geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
   xlab("Standardized Residual") + ylab("Frequency") +
   ggtitle("A") +
-  theme_minimal() + theme(text = element_text(size=25))
+  theme_minimal() + theme(text = element_text(size=15))
 
 p2 <- ggplot(CAPEmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
          geom_point(size = 2) +
@@ -975,7 +1183,7 @@ p2 <- ggplot(CAPEmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
          scale_color_discrete(name = "Month") +
   xlab("CAPE [J/kg]") + ylab("Standardized Residual") +
   ggtitle("B") +
-  theme_minimal() + theme(text = element_text(size=26))
+  theme_minimal() + theme(text = element_text(size=15))
 grid.arrange(p1, p2, ncol = 2)
 ```
 Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of CAPE. The pattern in B indicates that predictions for larger values of CAPE are less accurate. 
@@ -1033,3 +1241,7 @@ BigDays.sfdfT %>%
             maxCAPE = max(maxCAPE), 
             difference = maxCAPE - minCAPE)
 ```
+
+
+
+
