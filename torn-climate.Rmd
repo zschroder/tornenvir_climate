@@ -117,6 +117,16 @@ sum(BigDays.sfdfT$n5, na.rm = TRUE)/AllTorn$nT[6] *100
 #100% of all EF5s occur in a cluster
 ```
 
+Clusters and NARR time
+```{r}
+BigDays.sfdfT %>%
+  group_by(NARRZtime) %>%
+  summarize(num = n(),
+            totalTots = sum(nT))
+dim(BigDays.sfdfT %>%
+  filter(nT == 10))[1]
+```
+
 *Cluster tornadoes*
 ```{r}
 x <- BigDays.sfdfT %>%
@@ -156,10 +166,8 @@ sts <- state.name[!state.name %in% c("Alaska", "Hawaii")]
 stateBorders <- us_states(states = sts)
 ```
 
-
 May 20, 2019
 ID: 201905206481
-
 ```{r}
 May20 <- BigDays.sfdfT %>%
   filter(cDate == "2019-05-20", groupNumber == 6481)
@@ -222,6 +230,7 @@ tm_shape(May20centroid) +
 May2019
 ```
 
+Range of values for environmental variables:
 ```{r}
 max(BigDays.sfdfT$maxCAPE)
 max(BigDays.sfdfT$minCIN)
@@ -238,10 +247,13 @@ mean(BigDays.sfdfT$minCIN)
 mean(BigDays.sfdfT$maxBS_deep)
 mean(BigDays.sfdfT$maxBS_shallow)
 ```
-*Plot the CAPE, HLCY, and CIN for the May 20, 2019 Big Day. First, read in the raster. *
+
+Plot the CAPE and DLBS for the May 20, 2019 Big Day: 
+
+*First, read in the raster. *
 ```{r}
 library(raster)
- rb <- brick(paste0("/Users/lordofmornin/Desktop/Projects/tornenvir_climate/merged_AWIP32.20190520/merged_AWIP32.2019052018")) #<-- this is for varying NARR times
+ rb <- brick(paste0("E:/Zoe/Projects/tornenvir_climate/merged_AWIP32.20190520/merged_AWIP32.2019052018")) #<-- this is for varying NARR times
   CAPE <- raster(rb, layer = 375)
   HLCY <- raster(rb, layer = 323)
   CIN <- raster(rb, layer = 376)
@@ -292,14 +304,15 @@ states <- us_states()
 ```{r, eval = FALSE}
 p1 <- tm_shape(CAPE_extent) +
   tm_raster(title = "",  n = 6, palette = "BuPu") +
-  tm_format(title = expression(paste("CAPE [J ", kg^-1, "]")), "World", legend.position = c("right", "bottom"),
-                   attr.position = c("right", "bottom"),
+  tm_format(title = expression(paste("CAPE [J / kg ]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "top"),
                    legend.frame = FALSE,
                    inner.margins = c(.1, 0.1, .15, .1), #bottom, left, top
                     legend.text.size = 1, legend.width = -0.28, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
 #tm_shape(counties) +
   #tm_borders(col = "grey") +
-  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("left", "bottom"), color.dark = "gray70") +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") + 
 tm_shape(states) +
   tm_borders() +
 tm_shape(May20, is.master = TRUE, projection = merc) +
@@ -313,7 +326,7 @@ p1
 
 **Bulk Shear**
 ```{r}
-BS_May20 <- crop(BS, extent(May20))
+BS_May20 <- crop(DLBS, extent(May20))
 BS_extent<- mask(BS_May20, May20)
 plot(BS_extent)
 
@@ -333,15 +346,17 @@ proj4string(BS_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-10
 
 ```{r, eval = FALSE}
 p4 <- tm_shape(BS_extent) +
-  tm_raster(title = "", n = 5, palette = "BuPu") +
-  tm_format(title = expression(paste("Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
-                   attr.position = c("right", "bottom"),
+  tm_raster(title = "", n = 5, palette = "Reds") +
+  tm_format(title = expression(paste("Deep-Layer Bulk Shear [m / s]")), "World", legend.position = c("right", "bottom"),
+  #tm_format(title = expression(paste("Deep-Layer Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
+                   attr.position = c("right", "top"),
                    legend.frame = FALSE,
                    inner.margins = c(.1, 0.1, .15, .1), #bottom, left, top
                     legend.text.size = 1, legend.width = -0.2, legend.title.size=1, legend.bg.color = "white", title.size = 1.4) +
 #tm_shape(counties) +
 #  tm_borders(col = "grey") +
-  tm_scale_bar(width = 0.3, size = 0.8, position = c("right", "top"), color.dark = "gray70") +
+  tm_scale_bar(width = 0.3, size = 0.8, position = c("left", "bottom"), color.dark = "gray70") +
+  tm_compass(size = 3, fontsize = 1, lwd = 2, color.dark = "gray70") + 
 tm_shape(states) +
   tm_borders() +
 tm_shape(May20, is.master = TRUE, projection = merc) +
@@ -360,6 +375,7 @@ tmap_arrange(p1, p4, ncol = 2, nrow = 1)
 
 # Climate variables. 
 
+Range of Climate Values
 ```{r}
 max(BigDays.sfdfT$max_CSST)
 max(BigDays.sfdfT$max_GAKSST)
@@ -383,6 +399,7 @@ mean(BigDays.sfdfT$PNA_daily)
 mean(BigDays.sfdfT$MJO_daily)
 ```
 
+CSST and GAKSST
 ```{r}
 CSST_xcoord <- c(-90, -70, -70, -90)
 CSST_ycoord <- c(15, 15, 25, 25)
@@ -604,7 +621,7 @@ tm_shape(stateBorders) +
 
 #The Models: 
 
-*Check the distributions of the response variables: *
+Distributions of the response variables: 
 
 `CAPE`
 ```{r}
@@ -667,6 +684,8 @@ plot_SLBS <- ggplot(BigDays.sfdfT, aes(maxBS_shallow)) +
 ggarrange(plot_DLBS, plot_SLBS, plot_CAPE, ncol = 1, nrow = 3)
 ```
 
+Does collinearity exist between the explanatory variables?:
+
 *What is the correlation between the climate variables? *
 ```{r}
 ClimVars <- data.frame( CSST = BigDays.sfdfT$max_CSST10day, GAKSST = BigDays.sfdfT$max_GAKSST10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
@@ -678,7 +697,7 @@ corrplot.mixed(cor(ClimVars), tl.col="black", lower.col="black", number.cex = 1,
 ```
 
 *There is a strong correlation between Caribbean sea surface temperature (ATL_SST) and Gulf of Alaska sea surface temperatures (GAK_SST). Therefore, we need to account for this. We do this by creating a new variable that is the gradient between ATL_SST and GAK_SST. *
-```{r,eval=FALSE}
+```{r}
 BigDays.sfdfT <- BigDays.sfdfT %>%
   mutate(SSTgradient_10day = max_CSST10day - max_GAKSST10day,
          SSTgradient_20day = max_CSST20day - max_GAKSST20day,
@@ -722,8 +741,9 @@ This relationship indicates that the stronger the gradient in SST between the Ca
 
 All collinearity issues have been removed. 
 
-##DLBS: 
-*What is the relationship between these variables and DLBS? *
+##DLBS Model: 
+
+Bivariate Relationship: 
 ```{r}
 DLBS_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, DLBS = BigDays.sfdfT$maxBS_deep)
 
@@ -731,11 +751,13 @@ DLBS_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = Big
 corrplot.mixed(cor(DLBS_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
 
+Initial Model: 
 ```{r}
 DLBS_m1 <- lm(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon, data = BigDays.sfdfT)
 summary(DLBS_m1)
 ```
 
+Seasonal Trend:
 ```{r}
 DLBSByMonth <- BigDays.sfdfT %>% 
   group_by(Mo) %>%
@@ -758,11 +780,12 @@ ggplot(DLBSByMonth, aes(x = as.factor(Mo), y = avgDLBS)) +
  scale_x_continuous(breaks = seq(1, 12, 1), labels = month.abb) +
   scale_y_continuous(limits = c(0, 2)) +
   coord_polar(start =0) +
-  labs(x = "Month", y = "Normalized Average Extremes of Deep-Layer Bulk Shear [m/s]") +
+  labs(x = "Month", y = "Normalized Averages of DLBS [m/s]") +
+  #ggtitle("a") +
   theme_minimal() )
 ```
 
-*Hour*
+Diurnal Trend:
 ```{r}
 DLBSByHour <- BigDays.sfdfT %>% 
   group_by(Hour_UTC) %>%
@@ -785,7 +808,7 @@ ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
   scale_y_continuous(limits = c(0, 40)) +
   coord_polar(start =-0.2) +
-  labs(x = "Hour (UTC)", y = "Average Extremes of Deep-Layer Bulk Shear [m/s]") +
+  labs(x = "Hour (UTC)", y = "Average Extremes of DLBS [m/s]") +
   theme_minimal() )
 ```
 
@@ -793,8 +816,7 @@ ggplot(DLBSByHour, aes(x = as.factor(Hour_UTC), y = avgDLBS)) +
 ggarrange(p0, p1)
 ```
 
-
-*Year*
+Annual Trend: 
 ```{r}
 DLBSByYear <- BigDays.sfdfT %>% 
   group_by(Year) %>%
@@ -811,7 +833,7 @@ ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p0 <- ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
+( px <- ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
   geom_bar(stat = "identity", fill = "gray70") +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
   scale_y_continuous(limits = c(0, 40)) +
@@ -820,11 +842,18 @@ ggplot(DLBSByYear, aes(x = as.factor(Year), y = avgDLBS)) +
   theme_minimal() )
 ```
 
+Models: 
 ```{r}
-DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon +(1|Mo), data = BigDays.sfdfT)
+DLBS_m2 <- lmer(maxBS_deep ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Year + (1|Mo), data = BigDays.sfdfT)
 summary(DLBS_m2)
 ranef(DLBS_m2) #There is a strong seasonal variation in DLBS values. 
 ```
+
+```{r}
+DLBSmod_coefs <- summary(DLBS_m2)
+xtable(DLBSmod_coefs$coefficients, digits = 3)
+```
+
 
 ```{r}
 DLBS_m3 <- lmer(maxBS_deep ~ SSTgradient_10day + NAO_10day + PNA_10day+ Lat + Lon +(1|Mo), data = BigDays.sfdfT)
@@ -875,23 +904,23 @@ There is no relationship between the residuals.
 
 *Make a plot of the standardized residuals for the DLBS model*
 ```{r}
-DLBSmod.df <- fortify.merMod(model=DLBS_m8, data = getData(DLBS_m8))
+DLBSmod.df <- fortify.merMod(model=DLBS_m8, data = nlme::getData(DLBS_m8))
 DLBSmod.df$predDLBS <- predict(DLBS_m8)
 
-p1 <- ggplot(DLBSmod.df, aes(x = .scresid)) +
+pa <- ggplot(DLBSmod.df, aes(x = .scresid)) +
   geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
   xlab("Standardized Residual") + ylab("Frequency") +
   ggtitle("A") +
   theme_minimal() + theme(text = element_text(size=15))
 
-p2 <- ggplot(DLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
+pb <- ggplot(DLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
          geom_point(size = 2) +
         # scale_x_log10() +
          scale_color_discrete(name = "Month") +
   xlab("DLBS [m/s]") + ylab("Standardized Residual") +
   ggtitle("B") +
   theme_minimal() + theme(text = element_text(size=15))
-grid.arrange(p1, p2, ncol = 2)
+grid.arrange(pa, pb, ncol = 2)
 ```
 Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of DLBS. The pattern in B indicates that predictions for larger values of DLBS are less accurate. 
 
@@ -900,7 +929,7 @@ Conditional standardized residuals from the linear regression model. (A) Histogr
 predictDLBS <- predict(DLBS_m8)
 BigDays.sfdfT$predDLBS <- predictDLBS
 
-cor(BigDays.sfdfT$maxBS_deep, predictDLBS)
+cor.test(BigDays.sfdfT$maxBS_deep, predictDLBS, conf.level = 0.95)
 ```
 This model explains 52% of the variation of DLBS.
 
@@ -935,8 +964,9 @@ ggplot() +
       theme(text = element_text(size=15))
 ```
 
-##SLBS:
+##SLBS Model:
 
+Seasonal Trend: 
 ```{r}
 SLBSByMonth <- BigDays.sfdfT %>% 
   group_by(Mo) %>%
@@ -954,16 +984,17 @@ ggplot(SLBSByMonth, aes(x = as.factor(Mo), y = avgSLBS)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p0 <- ggplot(SLBSByMonth, aes(x = Mo, y = avgSLBS)) +
+( p2 <- ggplot(SLBSByMonth, aes(x = Mo, y = avgSLBS)) +
   geom_bar(stat = "identity", fill = "gray70") +
  scale_x_continuous(breaks = seq(1, 12, 1), labels = month.abb) +
-  scale_y_continuous(limits = c(0, 1)) +
+  scale_y_continuous(limits = c(0, 1.1)) +
   coord_polar(start =0) +
-  labs(x = "Month", y = "Normalized Average Extremes of Shallow-Layer Bulk Shear [m/s]") +
+  labs(x = "Month", y = "Normalized Averages of SLBS [m/s]") +
+      #ggtitle("b") +
   theme_minimal() )
 ```
 
-*Hour*
+Diurnal Trend: 
 ```{r}
 SLBSByHour <- BigDays.sfdfT %>% 
   group_by(Hour_UTC) %>%
@@ -981,24 +1012,150 @@ ggplot(SLBSByHour, aes(x = as.factor(Hour_UTC), y = avgSLBS)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p1 <- ggplot(SLBSByHour, aes(x = as.factor(Hour_UTC), y = avgSLBS)) +
+( p3 <- ggplot(SLBSByHour, aes(x = as.factor(Hour_UTC), y = avgSLBS)) +
   geom_bar(stat = "identity", fill = "gray70") +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
   scale_y_continuous(limits = c(0, 30)) +
   coord_polar(start =-0.2) +
-  labs(x = "Hour (UTC)", y = "Average Extremes of Shallow-Layer Bulk Shear [m/s]") +
+  labs(x = "Hour (UTC)", y = "Average Extremes of SLBS [m/s]") +
   theme_minimal() )
 ```
 
 ```{r}
-ggarrange(p0, p1)
+ggarrange(p2, p3)
 ```
 
-##CAPE: 
+Initial Model: 
+```{r}
+SLBS_m1 <- lm(maxBS_shallow ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon, data = BigDays.sfdfT)
+summary(DLBS_m1)
+```
+
+Models: 
+```{r}
+SLBS_m2 <- lmer(maxBS_shallow ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon + Year + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m2)
+ranef(SLBS_m2) #There is a strong seasonal variation in DLBS values. 
+```
+
+```{r}
+SLBSmod_coefs <- summary(SLBS_m2)
+xtable(SLBSmod_coefs$coefficients, digits = 3)
+```
 
 
+```{r}
+SLBS_m3 <- lmer(maxBS_shallow ~ SSTgradient_10day + PNA_10day +  MJO_10day + Lat + Lon + Year + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m3)
+ranef(SLBS_m3) 
+```
 
-*What is the relationship between these variables and CAPE? *
+```{r}
+SLBS_m4 <- lmer(maxBS_shallow ~ SSTgradient_20day + avg_Nino3420day + NAO_20day + PNA_20day +  MJO_20day + Lat + Lon +(1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m4)
+ranef(SLBS_m4)
+```
+
+```{r}
+SLBS_m5 <- lmer(maxBS_shallow ~ SSTgradient_30day + avg_Nino3430day + NAO_30day + PNA_30day +  MJO_30day + Lat + Lon +(1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m5)
+ranef(SLBS_m5)
+```
+
+```{r}
+SLBS_m6 <- lmer(maxBS_shallow ~ SSTgradient_5day + avg_Nino345day + NAO_5day + PNA_5day +  MJO_5day + Lat + Lon +(1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m6)
+ranef(SLBS_m6)
+```
+
+```{r}
+SLBS_m7 <- lmer(maxBS_shallow ~ SSTgradient_20day + avg_Nino3430day + NAO_20day + PNA_10day +  MJO_30day + Lat + Lon +(1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m7)
+ranef(SLBS_m7)
+```
+
+```{r}
+SLBS_m8 <- lmer(maxBS_shallow ~ SSTgradient_20day + NAO_20day + PNA_10day +  MJO_30day + Lat + Lon + Year + (1|Mo), data = BigDays.sfdfT)
+summary(SLBS_m8)
+ranef(SLBS_m8)
+```
+
+*Model 8 is the best*
+```{r}
+AIC(SLBS_m1, SLBS_m2, SLBS_m3, SLBS_m4, SLBS_m5, SLBS_m6, SLBS_m7, SLBS_m8)
+```
+
+*Check the residuals of model 8 of SLBS.*
+```{r}
+plot(residuals(SLBS_m8)) 
+```
+There is no relationship between the residuals.
+
+*Make a plot of the standardized residuals for the SLBS model*
+```{r}
+SLBSmod.df <- fortify.merMod(model=SLBS_m8, data = nlme::getData(SLBS_m8))
+SLBSmod.df$predSLBS <- predict(SLBS_m8)
+
+pa <- ggplot(SLBSmod.df, aes(x = .scresid)) +
+  geom_histogram(binwidth = .5, color = "white", fill = "gray40") +
+  xlab("Standardized Residual") + ylab("Frequency") +
+  ggtitle("A") +
+  theme_minimal() + theme(text = element_text(size=15))
+
+pb <- ggplot(SLBSmod.df, aes(x = .fitted, y = .scresid, color = factor(Mo))) +
+         geom_point(size = 2) +
+        # scale_x_log10() +
+         scale_color_discrete(name = "Month") +
+  xlab("SLBS [m/s]") + ylab("Standardized Residual") +
+  ggtitle("B") +
+  theme_minimal() + theme(text = element_text(size=15))
+grid.arrange(pa, pb, ncol = 2)
+```
+Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of SLBS. The pattern in B indicates that predictions for larger values of SLBS are less accurate. 
+
+*How does the model do compared to the actual values? *
+```{r}
+predictSLBS <- predict(SLBS_m8)
+BigDays.sfdfT$predSLBS <- predictSLBS
+
+cor.test(BigDays.sfdfT$maxBS_shallow, predictSLBS, conf.level = 0.95)
+```
+This model explains 65% of the variation of SLBS.
+
+*Make a table of the model coefficients. *
+```{r}
+SLBSmod_coefs <- summary(SLBS_m8)
+xtable(SLBSmod_coefs$coefficients, digits = 3)
+```
+
+*What are the confidence intervals for the model? *
+```{r}
+confint(SLBS_m8)
+```
+
+*Plot the observed vs Predicted values of SLBS*
+```{r}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = maxBS_shallow, 
+                 y = predSLBS, col = Mo), 
+             size = 5, 
+             show.legend = TRUE,  
+             stroke = 0, 
+             alpha = 0.8) +
+      scale_colour_continuous(type = "viridis", guide = guide_colorbar(reverse = TRUE)) +
+  geom_abline(slope = 1, 
+                  size = 1.25,
+              col = "blue") + 
+  ylab("Estimated SLBS [m/s]") + 
+      xlab("Observed SLBS [m/s]") +
+      theme_minimal() + 
+      theme(text = element_text(size=15))
+```
+
+##CAPE Model: 
+
+Bivariate Relationship: 
 ```{r}
 CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC), CAPE = BigDays.sfdfT$maxCAPE)
 
@@ -1006,6 +1163,7 @@ CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = Big
 corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
 
+Initial Model: 
 ```{r}
 CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon, data = BigDays.sfdfT)
 summary(CAPE_m1)
@@ -1014,6 +1172,7 @@ library(sm)
 sm.density(CAPE_m1$residuals, model = "Normal")
 ```
 
+Seasonal Trend: 
 ```{r}
 CAPEByMonth <- BigDays.sfdfT %>% 
   group_by(Mo) %>%
@@ -1031,16 +1190,18 @@ ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p0 <- ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
+( p4 <- ggplot(CAPEByMonth, aes(x = as.factor(Mo), y = avgCAPE)) +
   geom_bar(stat = "identity", fill = "gray70") +
  scale_x_discrete(breaks = seq(1, 12, 1), labels = month.abb) +
   scale_y_continuous(limits = c(0, 75)) +
   coord_polar(start =0) +
-  labs(x = "Month", y = "Normalized Average Extremes of CAPE [J/kg]") +
+  labs(x = "Month", y = "Normalized Averages of CAPE [J/kg]") +
+      #ggtitle("c") +
   theme_minimal() )
 ```
 
-*Hour*
+Diurnal Trend: 
+
 ```{r}
 CAPEByHour <- BigDays.sfdfT %>% 
   group_by(Hour_UTC) %>%
@@ -1057,7 +1218,7 @@ ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-( p1 <- ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
+( p5 <- ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
   geom_bar(stat = "identity", fill = "gray70") +
   #scale_x_discrete(breaks = seq(0, 24, 0.5)) +
   scale_y_continuous(limits = c(0, 3500)) +
@@ -1067,18 +1228,17 @@ ggplot(CAPEByHour, aes(x = as.factor(Hour_UTC), y = avgCAPE)) +
 ```
 
 ```{r}
-ggarrange(p0, p1)
+ggarrange(p0, p1, p2, p3, p4, p5, nrow = 3, ncol = 2)
 ```
 
-
-*Year*
+Annual Trend: 
 ```{r}
 CAPEByYear <- BigDays.sfdfT %>% 
   group_by(Year) %>%
   summarize(avgCAPE = mean(maxCAPE)) 
 ```
 
-`Make a figure of the total tornadoes from 1994 to 2018 by Hour`
+`Make a figure of the total tornadoes from 1994 to 2018 by Year`
 ```{r}
 ggplot(CAPEByYear, aes(x = as.factor(Year), y = avgCAPE)) +
   geom_bar(stat = "identity", fill = "gray70") +
@@ -1097,12 +1257,20 @@ ggplot(CAPEByYear, aes(x = as.factor(Year), y = avgCAPE)) +
   theme_minimal() )
 ```
 
+Models:
+
 ```{r}
-CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + MJO_10day + Lon + (1|Month), data = BigDays.sfdfT)
+CAPE_m2 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day + MJO_10day + Lat + Lon + Year (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 
 summary(CAPE_m2)
 ranef(CAPE_m2) 
 ```
+
+```{r}
+CAPEmod_coefs <- summary(CAPE_m2)
+xtable(CAPEmod_coefs$coefficients, digits = 3)
+```
+
 
 ```{r}
 CAPE_m3 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + MJO_10day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
@@ -1112,10 +1280,6 @@ summary(CAPE_m3)
 ```{r}
 CAPE_m4 <- lmer(maxCAPE ~ SSTgradient_10day + avg_Nino3410day + Lon + (1|MJO_10day) + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m4)
-```
-
-```{r}
-AIC(CAPE_m1,CAPE_m2,CAPE_m3,CAPE_m4)
 ```
 
 ```{r}
@@ -1134,7 +1298,7 @@ summary(CAPE_m7)
 ```
 
 ```{r}
-CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_5day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m8)
 ```
 
@@ -1142,15 +1306,13 @@ summary(CAPE_m8)
 AIC(CAPE_m3,CAPE_m5,CAPE_m6,CAPE_m7, CAPE_m8)
 ```
 
-Using the AIC value, Model 5 is the best. Even with 31 degrees of freedom...
-
 ```{r}
-CAPE_model <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_model <- lmer(maxCAPE ~ SSTgradient_30day + PNA_5day +  MJO_5day + Lon + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_model)
 ```
 
 ```{r}
-CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_5day + Lon + Lat + (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
+CAPE_m8 <- lmer(maxCAPE ~ SSTgradient_20day + PNA_5day +  MJO_10day + Lon +  (1|Month) + (1|Hour_UTC), data = BigDays.sfdfT)
 summary(CAPE_m8)
 ```
 
@@ -1164,11 +1326,10 @@ CAPE_model <- CAPE_m8
 ```{r}
 plot(residuals(CAPE_model)) 
 ```
-There is no relationship between the residuals.
 
 *Make a plot of the standardized residuals for the CAPE model*
 ```{r}
-CAPEmod.df <- fortify.merMod(model=CAPE_model, data = getData(CAPE_model), na.rm = TRUE)
+CAPEmod.df <- fortify.merMod(model=CAPE_model, data = nlme::getData(CAPE_model), na.rm = TRUE)
 CAPEmod.df$predCAPE <- predict(CAPE_model)
 
 p1 <- ggplot(CAPEmod.df, aes(x = .scresid)) +
@@ -1188,23 +1349,22 @@ grid.arrange(p1, p2, ncol = 2)
 ```
 Conditional standardized residuals from the linear regression model. (A) Histogram and (B) Residuals as a function of predicted values of CAPE. The pattern in B indicates that predictions for larger values of CAPE are less accurate. 
 
-*How does the model do compared to the actual values? *
+*How does the CAPE model do compared to the actual values? *
 ```{r}
 predictCAPE <- predict(CAPE_model)
 BigDays.sfdfT$predCAPE <- predictCAPE
 
-cor(BigDays.sfdfT$maxCAPE, predictCAPE)
+cor.test(BigDays.sfdfT$maxCAPE, predictCAPE, conf.level = 0.95)
 ```
 This model explains 66% of the variation of CAPE.
 
-*Make a table of the model coefficients. *
+*Make a table of the CAPE model coefficients. *
 ```{r}
 CAPEmod_coefs <- summary(CAPE_model)
 xtable(CAPEmod_coefs$coefficients, digits = 3)
 ```
-To read these, you must square them. For every unit increase in the SST gradient, CAPE increases by 24%. (Is that right?)
 
-*What are the confidence intervals for the model? *
+*What are the confidence intervals for the CAPE model? *
 ```{r}
 confint(CAPE_model)
 ```
@@ -1242,6 +1402,182 @@ BigDays.sfdfT %>%
             difference = maxCAPE - minCAPE)
 ```
 
+**Illustrate the CAPE, SLBS, and DLBS models:**
+
+CAPE
+```{r}
+Hours <- seq(1,12,1)
+
+newdata1 = data.frame(SSTgradient_20day = 10, PNA_5day = 3.5, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+
+newdata2 = data.frame(SSTgradient_20day = 22, PNA_5day = -2, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+
+newdata3 = data.frame(SSTgradient_20day = 40, PNA_5day = -6, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+
+CAPEpred1 <- predict(CAPE_model, newdata = newdata1, allow.new.levels = TRUE, type = "response")
+#2262.468
+
+CAPEpred2 <- predict(CAPE_model, newdata = newdata2, allow.new.levels = TRUE, type = "response")
+#1942
 
 
+CAPEpred3 <- predict(CAPE_model, newdata = newdata3, allow.new.levels = TRUE, type = "response")
+#1193
 
+CAPEpred1 <- c(10, 3.5, 2139)
+CAPEpred2 <- c(22, -2, 1819)
+CAPEpred3 <- c(40, -6, 1070)
+test <- as.data.frame(rbind(CAPEpred1, CAPEpred2, CAPEpred3))
+colnames(test) <- c("SSTgradient_20day", "PNA_5day", "value")
+```
+
+Create a prediction grid.
+```{r}
+library(reshape2)
+pgrid <- expand.grid(SSTgradient_20day = seq(.1, 50, length = 100),
+                     PNA_5day = seq(-7, 5, length = 100),
+                     MJO_10day = 4.45,  
+                     Lon = -92, 
+                     Month = 4, 
+                     Hour_UTC = 18)
+pgrid$pre <- predict(CAPE_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
+
+pgridL = melt(pgrid, id.vars = c("SSTgradient_20day", "PNA_5day"), measure.vars = "pre")
+
+#x<- matrix(pre, nrow = 5001, byrow = FALSE)
+e <- c(12, 12.5, 13, 13.5)
+ CAPEFIG <- ggplot(pgridL, aes(x = SSTgradient_20day, y = PNA_5day, fill = value)) +
+  geom_tile( show.legend = TRUE) +
+#geom_contour(aes(z = value), color = "green") + 
+  #scale_fill_gradient("BuPu")
+   #scale_fill_brewer(palette = "BuPu") +
+  scale_fill_viridis_c(option = "D", direction = 1) +
+  theme_bw() +
+  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+        legend.background = element_rect(size=0.5)) +
+     ggtitle("c") +
+  xlab(expression(paste("20-day average SST gradient"))) + 
+  ylab(expression(paste("5-day average PNA"))) +
+  labs(fill = "CAPE [J / kg]") + geom_point(data = test, size = 4) 
+#e <- c(12,  12.5, 13, 13.5)
+#ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
+ # geom_raster(show.legend = TRUE) +
+ # scale_fill_viridis_c(breaks = log(10^e), labels = c(1, 3.2, 10, 32))
+```
+
+SLBS
+```{r}
+SLBS_model <- SLBS_m8
+
+SLBSpred1 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 10, NAO_20day = -0.0197, PNA_10day = 3.5,  MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), type = "response")
+#7.79
+
+SLBSpred2 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 22, PNA_10day = -2, NAO_20day = -0.0197, MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), allow.new.levels = TRUE, type = "response")
+#18.8
+
+
+SLBSpred3 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 40, PNA_10day = -6, NAO_20day = -0.0197, MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), allow.new.levels = TRUE, type = "response")
+#32.4
+
+SLBSpred1 <- c(10, 3.5, 8.57)
+SLBSpred2 <- c(22, -2, 19.6)
+SLBSpred3 <- c(40, -6, 33.2)
+test <- as.data.frame(rbind(SLBSpred1, SLBSpred2, SLBSpred3))
+colnames(test) <- c("SSTgradient_20day", "PNA_10day", "value")
+```
+
+Create a prediction grid. 
+```{r}
+library(reshape2)
+pgrid <- expand.grid(SSTgradient_20day = seq(.1, 50, length = 100),
+                     PNA_10day = seq(-7, 5, length = 100),
+                     NAO_20day = -0.0197,
+                     MJO_30day = 4.45,
+                     Lat = 37.13,
+                     Lon = -92, 
+                     Year = 2020, 
+                     Mo = 4)
+pgrid$pre <- predict(SLBS_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
+
+pgridL = melt(pgrid, id.vars = c("SSTgradient_20day", "PNA_10day"), measure.vars = "pre")
+
+#x<- matrix(pre, nrow = 5001, byrow = FALSE)
+e <- c(12, 12.5, 13, 13.5)
+ SLBSFIG<- ggplot(pgridL, aes(x = SSTgradient_20day, y = PNA_10day, fill = value)) +
+  geom_tile( show.legend = TRUE) +
+#geom_contour(aes(z = value), color = "green") + 
+  #scale_fill_gradient("BuPu")
+   #scale_fill_brewer(palette = "BuPu") +
+  scale_fill_viridis_c(option = "D", direction = 1) +
+  theme_bw() +
+  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+        legend.background = element_rect(size=0.5)) +
+     ggtitle("b") +
+  xlab(expression(paste("20-day average SST gradient"))) + 
+  ylab(expression(paste("10-day average PNA"))) +
+  labs(fill = "SLBS [m / s]") + geom_point(data = test, size = 4) 
+#e <- c(12,  12.5, 13, 13.5)
+#ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
+ # geom_raster(show.legend = TRUE) +
+ # scale_fill_viridis_c(breaks = log(10^e), labels = c(1, 3.2, 10, 32))
+```
+
+DLBS
+```{r}
+DLBS_model <- DLBS_m8
+
+DLBSpred1 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 10, NAO_20day = -0.0197, PNA_30day = 3.5,  Lat = 37.13, Lon = -92, Mo = 4), type = "response")
+#7.79
+
+DLBSpred2 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 22, PNA_30day = -2, NAO_20day = -0.0197, Lat = 37.13, Lon = -92, Mo = 4), allow.new.levels = TRUE, type = "response")
+#18.8
+
+
+DLBSpred3 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 40, PNA_30day = -6, NAO_20day = -0.0197, Lat = 37.13, Lon = -92, Mo = 4), allow.new.levels = TRUE, type = "response")
+#32.4
+
+DLBSpred1 <- c(10, 3.5, 19.3)
+DLBSpred2 <- c(22, -2, 32.7)
+DLBSpred3 <- c(40, -6, 49.9)
+test <- as.data.frame(rbind(DLBSpred1, DLBSpred2, DLBSpred3))
+colnames(test) <- c("SSTgradient_10day", "PNA_30day", "value")
+```
+
+Create a prediction grid. 
+```{r}
+library(reshape2)
+pgrid <- expand.grid(SSTgradient_10day = seq(.1, 50, length = 100),
+                     PNA_30day = seq(-7, 5, length = 100),
+                     NAO_20day = -0.0197,
+                     Lat = 37.13,
+                     Lon = -92,
+                     Mo = 4)
+pgrid$pre <- predict(DLBS_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
+
+pgridL = melt(pgrid, id.vars = c("SSTgradient_10day", "PNA_30day"), measure.vars = "pre")
+
+#x<- matrix(pre, nrow = 5001, byrow = FALSE)
+e <- c(12, 12.5, 13, 13.5)
+DLBSFIG <-  ggplot(pgridL, aes(x = SSTgradient_10day, y = PNA_30day, fill = value)) +
+  geom_tile( show.legend = TRUE) +
+#geom_contour(aes(z = value), color = "green") + 
+  #scale_fill_gradient("BuPu")
+   #scale_fill_brewer(palette = "BuPu") +
+  scale_fill_viridis_c(option = "D", direction = 1) +
+  theme_bw() +
+  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+        legend.background = element_rect(size=0.5)) +
+  ggtitle("a") +
+  xlab(expression(paste("10-day average SST gradient"))) + 
+  ylab(expression(paste("30-day average PNA"))) +
+  labs(fill = "DLBS [m / s]") + geom_point(data = test, size = 4) 
+#e <- c(12,  12.5, 13, 13.5)
+#ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
+ # geom_raster(show.legend = TRUE) +
+ # scale_fill_viridis_c(breaks = log(10^e), labels = c(1, 3.2, 10, 32))
+```
+
+Combine into a single plot
+```{r}
+ggarrange(DLBSFIG, SLBSFIG, CAPEFIG, ncol= 1, nrow=3)
+```
