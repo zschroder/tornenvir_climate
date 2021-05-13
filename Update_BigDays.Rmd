@@ -1531,8 +1531,7 @@ BigDays.sfdfT$NAO_30day <- NAO_30day
 *Daily MJO: *
 
 ```{r, eval = FALSE}
-#download.file(url = "http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt" ,
-#              destfile = "DailyMJO.csv", mode = "wb")
+#download.file(url = "http://www.bom.gov.au/climate/mjo/graphics/rmm.74toRealtime.txt", destfile = "DailyMJO.csv", mode = "wb")
 MJO_daily<- read.csv("DailyMJO.csv")
 MJO_daily <- MJO_daily %>%
   filter(year >= 1994 & year <= 2021)
@@ -1547,7 +1546,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   print(i)
   row = MJO_daily %>%
     filter(Date == BigDays.sfdfT$cDate[i])
-    MJO_dailyvals <- c(MJO_dailyvals, row$phase)
+    MJO_dailyvals <- c(MJO_dailyvals, row$amplitude)
 }
 
 BigDays.sfdfT$MJO_daily <- MJO_dailyvals
@@ -1562,7 +1561,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-5
   dat <- MJO_daily[startrow:rownum,]
-  MJO_5day <- c(MJO_5day, mean(dat$phase))
+  MJO_5day <- c(MJO_5day, mean(dat$amplitude))
 } 
 
 BigDays.sfdfT$MJO_5day <- MJO_5day
@@ -1578,7 +1577,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-10
   dat <- MJO_daily[startrow:rownum,]
-  MJO_10day <- c(MJO_10day, mean(dat$phase))
+  MJO_10day <- c(MJO_10day, mean(dat$amplitude))
 } 
 
 BigDays.sfdfT$MJO_10day <- MJO_10day
@@ -1594,7 +1593,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-20
   dat <- MJO_daily[startrow:rownum,]
-  MJO_20day <- c(MJO_20day, mean(dat$phase))
+  MJO_20day <- c(MJO_20day, mean(dat$amplitude))
 } 
 
 BigDays.sfdfT$MJO_20day <- MJO_20day
@@ -1610,7 +1609,7 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
   rownum = which(MJO_daily$Date == BigDays.sfdfT$cDate[i])
   startrow = rownum-30
   dat <- MJO_daily[startrow:rownum,]
-  MJO_30day <- c(MJO_30day, mean(dat$phase))
+  MJO_30day <- c(MJO_30day, mean(dat$amplitude))
 } 
 
 BigDays.sfdfT$MJO_30day <- MJO_30day
@@ -1752,7 +1751,7 @@ Data from: https://psl.noaa.gov/cgi-bin/db_search/DBSearch.pl?Dataset=NOAA+High-
 ```{r, eval = FALSE}
 library(raster)
 library(ncdf4)
-ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
+ncpath <- "E:/Zoe/Projects/tornenvir_climate/"
 ncname <- "SST1994"  
 ncfname <- paste(ncpath, ncname, ".nc", sep="")
 library(ncdf4)
@@ -1798,7 +1797,7 @@ min_GAKSST <- numeric()
 min_Nino34 <- numeric()
 
 for(i in 1994:2020) {
-  ncpath <- "C:/Users/lordofmornin/Desktop/Projects/tornenvir_climate/"
+  ncpath <- "E:/Zoe/Projects/tornenvir_climate/"
   ncname <- paste0("SST", i)  
   ncfname <- paste(ncpath, ncname, ".nc", sep="")
   raster_dat <- raster::brick(ncfname)
@@ -1950,6 +1949,37 @@ for (i in 1:dim(BigDays.sfdfT)[1]) {
 } 
 
 BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST10day, avg_GAKSST10day, avg_Nino3410day, max_CSST10day, max_GAKSST10day, max_Nino3410day, min_CSST10day, min_GAKSST10day, min_Nino3410day)
+
+```
+*Get the 20 day average values*
+```{r, eval = FALSE}
+avg_CSST15day <- numeric()
+avg_GAKSST15day <- numeric()
+avg_Nino3415day <- numeric()
+max_CSST15day <- numeric()
+max_GAKSST15day <- numeric()
+max_Nino3415day <- numeric()
+min_CSST15day <- numeric()
+min_GAKSST15day <- numeric()
+min_Nino3415day <- numeric()
+
+for (i in 1:dim(BigDays.sfdfT)[1]) {
+  print(i)
+  rownum = which(ClimVars$Year == BigDays.sfdfT$Year[i] & ClimVars$Day == BigDays.sfdfT$DayofYear[i])
+  startrow = rownum-15
+  dat <- ClimVars[startrow:rownum,]
+  avg_CSST15day <- c(avg_CSST15day, mean(dat$avg_CSST))
+  max_CSST15day <- c(max_CSST15day, mean(dat$max_CSST))
+  min_CSST15day <- c(min_CSST15day, mean(dat$min_CSST))
+  avg_GAKSST15day <- c(avg_GAKSST15day, mean(dat$avg_GAKSST))
+  max_GAKSST15day <- c(max_GAKSST15day, mean(dat$max_GAKSST))
+  min_GAKSST15day <- c(min_GAKSST15day, mean(dat$min_GAKSST))
+  avg_Nino3415day <- c(avg_Nino3415day, mean(dat$avg_Nino34))
+  max_Nino3415day <- c(max_Nino3415day, mean(dat$max_Nino34))
+  min_Nino3415day <- c(min_Nino3415day, mean(dat$min_Nino34))
+} 
+
+BigDays.sfdfT <- cbind(BigDays.sfdfT, avg_CSST15day, avg_GAKSST15day, avg_Nino3415day, max_CSST15day, max_GAKSST15day, max_Nino3415day, min_CSST15day, min_GAKSST15day, min_Nino3415day)
 
 ```
 *Get the 20 day average values*
