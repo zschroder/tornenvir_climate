@@ -301,10 +301,10 @@ counties <- us_counties()
 states <- us_states()
 ```
 
-```{r, eval = FALSE}
+```{r}
 p1 <- tm_shape(CAPE_extent) +
   tm_raster(title = "",  n = 6, palette = "BuPu") +
-  tm_format(title = expression(paste("CAPE [J / kg ]")), "World", legend.position = c("right", "bottom"),
+  tm_format(title = expression(paste("Convective Available Potential Energy [J ",kg^-1,"]")), "World", legend.position = c("right", "bottom"),
                    attr.position = c("right", "top"),
                    legend.frame = FALSE,
                    inner.margins = c(.1, 0.1, .15, .1), #bottom, left, top
@@ -344,10 +344,10 @@ BS_latlon <- SpatialPoints(BS_latlon)
 proj4string(BS_latlon) = CRS("+proj=lcc +lat_1=50 +lat_2=50 +lat_0=50 +lon_0=-107 +x_0=0 +y_0=0 +a=6371200 +b=6371200 +units=m +no_defs")
 ```
 
-```{r, eval = FALSE}
+```{r}
 p4 <- tm_shape(BS_extent) +
   tm_raster(title = "", n = 5, palette = "Reds") +
-  tm_format(title = expression(paste("Deep-Layer Bulk Shear [m / s]")), "World", legend.position = c("right", "bottom"),
+  tm_format(title = expression(paste("Deep-Layer Bulk Shear [m ",s^-1,"]")), "World", legend.position = c("right", "bottom"),
   #tm_format(title = expression(paste("Deep-Layer Bulk Shear [m ", s^-1, "]")), "World", legend.position = c("right", "bottom"),
                    attr.position = c("right", "top"),
                    legend.frame = FALSE,
@@ -444,7 +444,7 @@ data("World")
 West_Hemisphere <- World %>%
   filter(continent %in% c("North America", "South America"))
 
-tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+SSTmap <- tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(col = "gray70", alpha = 1) +
  tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(alpha = 0, border.alpha = 0)+ 
@@ -459,12 +459,16 @@ tm_shape(stateBorders) +
   tm_compass(size = 2, fontsize = 1, lwd = 2, color.dark = "gray70") +       
   tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
   tm_add_legend(type = "symbol", labels = c("Caribbean SST Zone", "Gulf of Alaska SST Zone", "Nino 3.4 SST Zone"), col = c("blue", "darkgreen", "goldenrod2"), size = 2, shape = 22, alpha = 0.6) +
-  tm_layout(legend.bg.color = "white", 
-            legend.text.size = .75, 
+  tm_layout(title = "Sea Surface Temperatures",
+            title.bg.color = "white",
+            title.size = 1.2, 
+            legend.bg.color = "white", 
+            legend.text.size = .8, 
             attr.position = c("left", "bottom"),
             legend.position = c("right", "bottom"),
             legend.stack = "horizontal",
-            inner.margins = c(0.15,0.05,0,0))
+            inner.margins = c(0.3,0.05,0.05,0))
+SSTmap
 ```
 
 NAO locations: 
@@ -504,7 +508,7 @@ data("World")
 West_Hemisphere <- World %>%
   filter(continent %in% c("North America", "South America"))
 
-tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+NAOmap <- tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(col = "gray70", alpha = 1) +
  tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(alpha = 0, border.alpha = 0)+ 
@@ -515,14 +519,17 @@ tm_shape(NAO2_sp, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WG
 tm_shape(stateBorders) + 
   tm_borders(col = "gray40", alpha = 1) +
   tm_compass(size = 2, fontsize = 1, lwd = 2, color.dark = "gray70", bg.color = "white") +       
-  tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70", bg.color = "white") +
+  tm_scale_bar(width = .35, size = 0.8, lwd = 1.9, color.dark = "gray70", bg.color = "white") +
   tm_add_legend(type = "symbol", labels = c("Icelandic Low", "Azores High"), col = c("blue", "darkgreen"), size = 2, shape = 22, alpha = 0.6) +
-  tm_layout(legend.bg.color = "white", 
-            legend.text.size = .75, 
+  tm_layout(title = "North Atlantic Oscillation", 
+            title.size = 1.2, 
+            title.bg.color = "white",
+            legend.bg.color = "white", 
+            legend.text.size = .8, 
             attr.position = c("right", "bottom"),
             legend.position = c("left", "bottom"),
             legend.stack = "horizontal",
-            inner.margins = c(0.15,0.05,0,0))
+            inner.margins = c(0.25,0.05,0.05,0))
 ```
 
 PNA Locations: 
@@ -582,7 +589,7 @@ data("World")
 West_Hemisphere <- World %>%
   filter(continent %in% c("North America", "South America"))
 
-tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
+PNAmap <- tm_shape(World, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(col = "gray70", alpha = 1) +
  tm_shape(MyBorders_sp, is.master = TRUE, projection = "+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs") + 
   tm_polygons(alpha = 0, border.alpha = 0)+ 
@@ -599,13 +606,23 @@ tm_shape(stateBorders) +
   tm_compass(size = 1.5, fontsize = 1, lwd = 2, color.dark = "gray70") +       
   tm_scale_bar(width = .3, size = 0.8, lwd = 1.75, color.dark = "gray70") +
   tm_add_legend(type = "symbol", labels = c("Pacific Height Regions", "North American Height Regions"), col = c("maroon1", "goldenrod2"), size = 2, shape = 22, alpha = 0.7) +
-  tm_layout(legend.bg.color = "white", 
+  tm_layout(title = "Pacific North Atlantic",
+            title.size = 1.2,
+            title.bg.color = "white",
+            legend.width = 0.8,
+            legend.bg.color = "white", 
             legend.text.size = .75, 
             attr.position = c("left", "bottom"),
             legend.position = c("right", "bottom"),
             legend.stack = "horizontal",
-            inner.margins = c(0.220,0.05,0,0))
+            inner.margins = c(0.220,0.05,0,0.1))
+PNAmap
 ```
+
+```{r}
+tmap_arrange(SSTmap, NAOmap, PNAmap, ncol = 2)
+```
+
 
 ```{r}
 #% DLBS < mean 
@@ -709,30 +726,30 @@ BigDays.sfdfT <- BigDays.sfdfT %>%
 
 What are the values of the climate variables? 
 ```{r}
-max(BigDays.sfdfT$max_Nino3410day)
-min(BigDays.sfdfT$max_Nino3410day)
-mean(BigDays.sfdfT$max_Nino3410day)
+max(BigDays.sfdfT$max_Nino3415day)
+min(BigDays.sfdfT$max_Nino3415day)
+mean(BigDays.sfdfT$max_Nino3415day)
 
-max(BigDays.sfdfT$NAO_10day)
-min(BigDays.sfdfT$NAO_10day)
-mean(BigDays.sfdfT$NAO_10day)
+max(BigDays.sfdfT$NAO_15day)
+min(BigDays.sfdfT$NAO_15day)
+mean(BigDays.sfdfT$NAO_15day)
 
-max(BigDays.sfdfT$PNA_10day)
-min(BigDays.sfdfT$PNA_10day)
-mean(BigDays.sfdfT$PNA_10day)
+max(BigDays.sfdfT$PNA_15day)
+min(BigDays.sfdfT$PNA_15day)
+mean(BigDays.sfdfT$PNA_15day)
 
-max(BigDays.sfdfT$MJO_10day)
-min(BigDays.sfdfT$MJO_10day)
-mean(BigDays.sfdfT$MJO_10day)
+max(BigDays.sfdfT$MJO_15day)
+min(BigDays.sfdfT$MJO_15day)
+mean(BigDays.sfdfT$MJO_15day)
 
-max(BigDays.sfdfT$SSTgradient_10day)
-min(BigDays.sfdfT$SSTgradient_10day)
-mean(BigDays.sfdfT$SSTgradient_10day)
+max(BigDays.sfdfT$SSTgradient_15day)
+min(BigDays.sfdfT$SSTgradient_15day)
+mean(BigDays.sfdfT$SSTgradient_15day)
 ```
 
 *Now let's look at the correlation matrix again: *
 ```{r}
-ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day)
+ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_15day, ENSO = BigDays.sfdfT$avg_Nino3415day, NAO = BigDays.sfdfT$NAO_15day, PNA = BigDays.sfdfT$PNA_15day, MJO = BigDays.sfdfT$MJO_15day)
 
 corrplot.mixed(cor(ClimVars2), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
@@ -1101,7 +1118,7 @@ ggplot() +
 
 Bivariate Relationship: 
 ```{r}
-CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_10day, ENSO = BigDays.sfdfT$avg_Nino3410day, NAO = BigDays.sfdfT$NAO_10day, PNA = BigDays.sfdfT$PNA_10day, MJO = BigDays.sfdfT$MJO_10day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC), CAPE = BigDays.sfdfT$maxCAPE)
+CAPE_env <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_15day, ENSO = BigDays.sfdfT$avg_Nino3415day, NAO = BigDays.sfdfT$NAO_15day, PNA = BigDays.sfdfT$PNA_15day, MJO = BigDays.sfdfT$MJO_15day, Lat = BigDays.sfdfT$Lat, Lon = BigDays.sfdfT$Lon, Year = BigDays.sfdfT$Year, Hour = as.numeric(BigDays.sfdfT$Hour_UTC), CAPE = BigDays.sfdfT$maxCAPE)
 
 
 corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
@@ -1109,7 +1126,7 @@ corrplot.mixed(cor(CAPE_env), tl.col="black", lower.col="black", number.cex = 1,
 
 Initial Model: 
 ```{r}
-CAPE_m1 <- lm(maxCAPE ~  SSTgradient_10day + avg_Nino3410day + NAO_10day + PNA_10day +  MJO_10day + Lat + Lon, data = BigDays.sfdfT)
+CAPE_m1 <- lm(maxCAPE ~  SSTgradient_15day + avg_Nino3415day + NAO_15day + PNA_15day +  MJO_15day + Lat + Lon, data = BigDays.sfdfT)
 summary(CAPE_m1)
 hist(CAPE_m1$residuals)
 library(sm)
@@ -1294,6 +1311,58 @@ ggplot() +
 
 ```
 
+```{r, eval = FALSE}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = maxCAPE, 
+                 y = predCAPE), #col = Month), 
+             color = "gray20",
+             size = 5, 
+             show.legend = FALSE,  
+             stroke = 0, 
+             alpha = 0.8) +
+  geom_smooth(method = "lm", data = BigDays.sfdfT,
+            aes(x = maxCAPE, 
+                 y = predCAPE), color = "green4", se = FALSE, fullrange = TRUE) +
+      #scale_colour_continuous(type = "viridis", guide = guide_colorbar(reverse = TRUE)) +
+    facet_wrap(~Hour_UTC, ncol = 6, labeller = label_value) +
+
+  geom_abline(slope = 1, 
+              size = 1.25,
+              col = "blue") + 
+  scale_y_continuous(expand = c(0,0), limits = c(-5, 6000)) +
+  scale_x_continuous(limits = c(-5, 6000), breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000)) +
+  ylab(expression(paste("Estimated CAPE [J ", kg^-1, "]"))) + 
+      xlab(expression(paste("Observed CAPE [J ", kg^-1, "]"))) +
+     theme_bw() + 
+      theme(text = element_text(size=15), strip.background = element_rect(size = 0.5), panel.border=element_rect(colour="black",size=1), panel.background=element_rect(fill="white"), axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+
+```
+
+```{r}
+ggplot() +
+  geom_point(data = BigDays.sfdfT, 
+             aes(x = maxCAPE, 
+                 y = predCAPE, col = Mo), 
+             size = 5, 
+             show.legend = TRUE,  
+             stroke = 0, 
+             alpha = 0.8) +
+      scale_colour_continuous(type = "viridis", guide = guide_colorbar(reverse = TRUE)) +
+  geom_abline(slope = 1, 
+              size = 1.25,
+              col = "blue") + 
+  scale_y_continuous(expand = c(0,0), limits = c(-5, 6000)) +
+  scale_x_continuous(limits = c(-5, 6000), breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000)) +
+  ylab(expression(paste("Estimated CAPE [J ", kg^-1, "]"))) + 
+      xlab(expression(paste("Observed CAPE [J ", kg^-1, "]"))) +
+     theme_bw() + 
+      theme(text = element_text(size=15), strip.background = element_rect(size = 0.5), panel.border=element_rect(colour="black",size=1), panel.background=element_rect(fill="white")) 
+
+
+```
+
 *Why is there such distinction between the predictions and month?*
 ```{r}
 BigDays.sfdfT %>%
@@ -1303,63 +1372,66 @@ BigDays.sfdfT %>%
             difference = maxCAPE - minCAPE)
 ```
 
+
+
+############################################################################
 **Illustrate the CAPE, SLBS, and DLBS models:**
 
 CAPE
 ```{r}
 Hours <- seq(1,12,1)
 
-newdata1 = data.frame(SSTgradient_20day = 10, PNA_5day = 3.5, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+newdata1 = data.frame(SSTgradient_15day = 10, MJO_15day = 1.29,  Lon = -92, Month = 4, Hour_UTC = 18)
 
-newdata2 = data.frame(SSTgradient_20day = 22, PNA_5day = -2, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+newdata2 = data.frame(SSTgradient_15day = 25, MJO_15day = 1.29,  Lon = -72, Month = 4, Hour_UTC = 18)
 
-newdata3 = data.frame(SSTgradient_20day = 40, PNA_5day = -6, MJO_10day = 4.45,  Lon = -92, Month = 4, Hour_UTC = 18)
+newdata3 = data.frame(SSTgradient_15day = 18, MJO_15day = 1.29,  Lon = -109, Month = 4, Hour_UTC = 18)
 
 CAPEpred1 <- predict(CAPE_model, newdata = newdata1, allow.new.levels = TRUE, type = "response")
-#2262.468
+#2364
 
 CAPEpred2 <- predict(CAPE_model, newdata = newdata2, allow.new.levels = TRUE, type = "response")
-#1942
+#970
 
 
 CAPEpred3 <- predict(CAPE_model, newdata = newdata3, allow.new.levels = TRUE, type = "response")
-#1193
+#1513
 
-CAPEpred1 <- c(10, 3.5, 2139)
-CAPEpred2 <- c(22, -2, 1819)
-CAPEpred3 <- c(40, -6, 1070)
+CAPEpred1 <- c(10, -92, 2364)
+CAPEpred2 <- c(25, -72, 970)
+CAPEpred3 <- c(18, -109, 1513)
 test <- as.data.frame(rbind(CAPEpred1, CAPEpred2, CAPEpred3))
-colnames(test) <- c("SSTgradient_20day", "PNA_5day", "value")
+colnames(test) <- c("SSTgradient_15day", "Lon", "value")
 ```
 
 Create a prediction grid.
 ```{r}
 library(reshape2)
-pgrid <- expand.grid(SSTgradient_20day = seq(.1, 50, length = 100),
-                     PNA_5day = seq(-7, 5, length = 100),
-                     MJO_10day = 4.45,  
-                     Lon = -92, 
+pgrid <- expand.grid(SSTgradient_15day = seq(0, 30, length = 100),
+                     MJO_15day = 1.29,  
+                     Lon = seq(-110, -70, length = 100), 
                      Month = 4, 
                      Hour_UTC = 18)
 pgrid$pre <- predict(CAPE_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
 
-pgridL = melt(pgrid, id.vars = c("SSTgradient_20day", "PNA_5day"), measure.vars = "pre")
+pgridL = melt(pgrid, id.vars = c("SSTgradient_15day", "Lon"), measure.vars = "pre")
 
 #x<- matrix(pre, nrow = 5001, byrow = FALSE)
 e <- c(12, 12.5, 13, 13.5)
- CAPEFIG <- ggplot(pgridL, aes(x = SSTgradient_20day, y = PNA_5day, fill = value)) +
+ CAPEFIG <- ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
   #scale_fill_gradient("BuPu")
    #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1) +
+  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,4000)) +
   theme_bw() +
-  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+  theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
      ggtitle("c") +
-  xlab(expression(paste("20-day average SST gradient"))) + 
-  ylab(expression(paste("5-day average PNA"))) +
+  xlab(expression(paste("Longitude"))) + 
+  ylab(expression(paste("15-day average SST gradient"))) +
   labs(fill = expression(paste("CAPE [J ", kg^-1, "]"))) + geom_point(data = test, size = 4) 
+  CAPEFIG
 #e <- c(12,  12.5, 13, 13.5)
 #ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
  # geom_raster(show.legend = TRUE) +
@@ -1370,53 +1442,52 @@ SLBS
 ```{r}
 SLBS_model <- SLBS_model
 
-SLBSpred1 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 10, NAO_20day = -0.0197, PNA_10day = 3.5,  MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), type = "response")
-#7.79
+SLBSpred1 <- predict(SLBS_model, newdata = data.frame(SSTgradient_15day = 10, NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -92, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
+#13
 
-SLBSpred2 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 22, PNA_10day = -2, NAO_20day = -0.0197, MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), allow.new.levels = TRUE, type = "response")
-#18.8
+SLBSpred2 <- predict(SLBS_model, newdata = data.frame(SSTgradient_15day = 25, NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -72, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
+#28.1
+SLBSpred3 <- predict(SLBS_model, newdata = data.frame(SSTgradient_15day = 18, NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -109, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
 
+#25
 
-SLBSpred3 <- predict(SLBS_model, newdata = data.frame(SSTgradient_20day = 40, PNA_10day = -6, NAO_20day = -0.0197, MJO_30day = 4.45,  Lat = 37.13, Lon = -92, Year = 2020, Mo = 4), allow.new.levels = TRUE, type = "response")
-#32.4
-
-SLBSpred1 <- c(10, 3.5, 8.57)
-SLBSpred2 <- c(22, -2, 19.6)
-SLBSpred3 <- c(40, -6, 33.2)
+SLBSpred1 <- c(10, -92, 13)
+SLBSpred2 <- c(25, -72, 28.1)
+SLBSpred3 <- c(18, -109, 25)
 test <- as.data.frame(rbind(SLBSpred1, SLBSpred2, SLBSpred3))
-colnames(test) <- c("SSTgradient_20day", "PNA_10day", "value")
+colnames(test) <- c("SSTgradient_15day", "Lon", "value")
 ```
 
 Create a prediction grid. 
 ```{r}
 library(reshape2)
-pgrid <- expand.grid(SSTgradient_20day = seq(.1, 50, length = 100),
-                     PNA_10day = seq(-7, 5, length = 100),
-                     NAO_20day = -0.0197,
-                     MJO_30day = 4.45,
+pgrid <- expand.grid(SSTgradient_15day = seq(0, 30, length = 100),
+                     PNA_15day = -2,
+                     NAO_15day = -0.0197,
                      Lat = 37.13,
-                     Lon = -92, 
+                     Lon = seq(-110, -70, length = 100), 
                      Year = 2020, 
-                     Mo = 4)
+                     Month = 4)
 pgrid$pre <- predict(SLBS_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
 
-pgridL = melt(pgrid, id.vars = c("SSTgradient_20day", "PNA_10day"), measure.vars = "pre")
+pgridL = melt(pgrid, id.vars = c("SSTgradient_15day", "Lon"), measure.vars = "pre")
 
 #x<- matrix(pre, nrow = 5001, byrow = FALSE)
 e <- c(12, 12.5, 13, 13.5)
- SLBSFIG<- ggplot(pgridL, aes(x = SSTgradient_20day, y = PNA_10day, fill = value)) +
+ SLBSFIG<- ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
   #scale_fill_gradient("BuPu")
    #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1) +
+  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
   theme_bw() +
-  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+  theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
      ggtitle("b") +
-  xlab(expression(paste("20-day average SST gradient"))) + 
-  ylab(expression(paste("10-day average PNA"))) +
+  xlab(expression(paste("Longitude"))) + 
+  ylab(expression(paste("15-day average SST gradient"))) +
   labs(fill = expression(paste("SLBS [m ", s^-1, "]"))) + geom_point(data = test, size = 4) 
+ SLBSFIG
 #e <- c(12,  12.5, 13, 13.5)
 #ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
  # geom_raster(show.legend = TRUE) +
@@ -1425,53 +1496,58 @@ e <- c(12, 12.5, 13, 13.5)
 
 DLBS
 ```{r}
+
 DLBS_model <- DLBS_model
 
-DLBSpred1 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 10, NAO_20day = -0.0197, PNA_30day = 3.5,  Lat = 37.13, Lon = -92, Mo = 4), type = "response")
-#7.79
+DLBSpred1 <- predict(DLBS_model, newdata = data.frame(SSTgradient_15day = 10, avg_Nino3415day = 27.3, NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -92, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
+#20.5
 
-DLBSpred2 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 22, PNA_30day = -2, NAO_20day = -0.0197, Lat = 37.13, Lon = -92, Mo = 4), allow.new.levels = TRUE, type = "response")
-#18.8
+DLBSpred2 <- predict(DLBS_model, newdata = data.frame(SSTgradient_15day = 25, avg_Nino3415day = 27.3,NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -72, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
+#35.1
+DLBSpred3 <- predict(DLBS_model, newdata = data.frame(SSTgradient_15day = 18, avg_Nino3415day = 27.3,NAO_15day = -0.0197, PNA_15day = -2,  Lat = 37.13, Lon = -109, Year = 2020, Month = 4), type = "response", allow.new.levels = TRUE)
 
+#47
 
-DLBSpred3 <- predict(DLBS_model, newdata = data.frame(SSTgradient_10day = 40, PNA_30day = -6, NAO_20day = -0.0197, Lat = 37.13, Lon = -92, Mo = 4), allow.new.levels = TRUE, type = "response")
-#32.4
-
-DLBSpred1 <- c(10, 3.5, 19.3)
-DLBSpred2 <- c(22, -2, 32.7)
-DLBSpred3 <- c(40, -6, 49.9)
+DLBSpred1 <- c(10, -92, 20.5)
+DLBSpred2 <- c(25, -72, 35.1)
+DLBSpred3 <- c(18, -109, 47)
 test <- as.data.frame(rbind(DLBSpred1, DLBSpred2, DLBSpred3))
-colnames(test) <- c("SSTgradient_10day", "PNA_30day", "value")
+colnames(test) <- c("SSTgradient_15day", "Lon", "value")
+
 ```
 
 Create a prediction grid. 
 ```{r}
 library(reshape2)
-pgrid <- expand.grid(SSTgradient_10day = seq(.1, 50, length = 100),
-                     PNA_30day = seq(-7, 5, length = 100),
-                     NAO_20day = -0.0197,
+pgrid <- expand.grid(SSTgradient_15day = seq(0, 30, length = 100),
+                     PNA_15day = -2,
+                     avg_Nino3415day = 27.3,
+                     NAO_15day = -0.0197,
                      Lat = 37.13,
-                     Lon = -92,
-                     Mo = 4)
+                     Lon = seq(-110, -70, length = 100), 
+                     Year = 2020, 
+                     Month = 4)
 pgrid$pre <- predict(DLBS_model, newdata = pgrid, allow.new.levels = TRUE, type = "response")
 
-pgridL = melt(pgrid, id.vars = c("SSTgradient_10day", "PNA_30day"), measure.vars = "pre")
+pgridL = melt(pgrid, id.vars = c("SSTgradient_15day", "Lon"), measure.vars = "pre")
 
 #x<- matrix(pre, nrow = 5001, byrow = FALSE)
 e <- c(12, 12.5, 13, 13.5)
-DLBSFIG <-  ggplot(pgridL, aes(x = SSTgradient_10day, y = PNA_30day, fill = value)) +
+DLBSFIG <-  ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
   #scale_fill_gradient("BuPu")
    #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1) +
+  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
   theme_bw() +
-  theme(text = element_text(size=15), legend.position="bottom", legend.key.width = unit(1.75, "cm"), 
+  theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
   ggtitle("a") +
-  xlab(expression(paste("10-day average SST gradient"))) + 
-  ylab(expression(paste("30-day average PNA"))) +
+  xlab(expression(paste("Longitude"))) + 
+  ylab(expression(paste("15-day average SST gradient"))) +
   labs(fill = expression(paste("DLBS [m ", s^-1, "]"))) + geom_point(data = test, size = 4) 
+
+DLBSFIG
 #e <- c(12,  12.5, 13, 13.5)
 #ggplot(pgridL, aes(x = maxCAPE2, y = maxBS2, fill = value)) +
  # geom_raster(show.legend = TRUE) +
@@ -1480,5 +1556,5 @@ DLBSFIG <-  ggplot(pgridL, aes(x = SSTgradient_10day, y = PNA_30day, fill = valu
 
 Combine into a single plot
 ```{r}
-ggarrange(DLBSFIG, SLBSFIG, CAPEFIG, ncol= 1, nrow=3)
+ggarrange(DLBSFIG, SLBSFIG, CAPEFIG, ncol= 2, nrow=2)
 ```
