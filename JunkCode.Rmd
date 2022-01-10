@@ -5,7 +5,7 @@ output: html_document
 
 
 
-
+Does this even work? 
 *We will figure that out later. *
 ```{r}
 CAPE_m5 <- lmer(maxCAPE ~ SSTgradient_30day + avg_Nino3430day + NAO_30day + PNA_30day +  MJO_30day + Lat + Lon+ (1|Mo), data = BigDays.sfdfT)
