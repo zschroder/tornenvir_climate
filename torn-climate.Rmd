@@ -749,7 +749,7 @@ mean(BigDays.sfdfT$SSTgradient_15day)
 
 *Now let's look at the correlation matrix again: *
 ```{r}
-ClimVars2 <- data.frame(SSTgradient = BigDays.sfdfT$SSTgradient_15day, ENSO = BigDays.sfdfT$avg_Nino3415day, NAO = BigDays.sfdfT$NAO_15day, PNA = BigDays.sfdfT$PNA_15day, MJO = BigDays.sfdfT$MJO_15day)
+ClimVars2 <- data.frame(SSTdiff = BigDays.sfdfT$SSTgradient_15day, ENSO = BigDays.sfdfT$avg_Nino3415day, NAO = BigDays.sfdfT$NAO_15day, PNA = BigDays.sfdfT$PNA_15day, MJO = BigDays.sfdfT$MJO_15day)
 
 corrplot.mixed(cor(ClimVars2), tl.col="black", lower.col="black", number.cex = 1, tl.cex = 1)
 ```
@@ -1445,15 +1445,15 @@ e <- c(12, 12.5, 13, 13.5)
  CAPEFIG <- ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
-  #scale_fill_gradient("BuPu")
-   #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,4000)) +
+  scale_fill_gradient(low = "rosybrown1", high = "firebrick4",expression(paste("CAPE [J ", kg^-1, "]"))) +
+  # scale_fill_brewer(palette = "Reds") +
+  #scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,4000)) +
   theme_bw() +
   theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
      ggtitle("c") +
   xlab(expression(paste("Longitude"))) + 
-  ylab(expression(paste("15-day average SST gradient"))) +
+  ylab(expression(paste("15-day average SST difference"))) +
   labs(fill = expression(paste("CAPE [J ", kg^-1, "]"))) + geom_point(data = test, size = 4) 
   CAPEFIG
 #e <- c(12,  12.5, 13, 13.5)
@@ -1501,15 +1501,16 @@ e <- c(12, 12.5, 13, 13.5)
  SLBSFIG<- ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
-  #scale_fill_gradient("BuPu")
+  
+  scale_fill_gradient(low = "thistle", high = "darkorchid4",expression(paste("SLBS [m ", s^-1, "]"))) +
    #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
+ # scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
   theme_bw() +
   theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
      ggtitle("b") +
   xlab(expression(paste("Longitude"))) + 
-  ylab(expression(paste("15-day average SST gradient"))) +
+  ylab(expression(paste("15-day average SST difference"))) +
   labs(fill = expression(paste("SLBS [m ", s^-1, "]"))) + geom_point(data = test, size = 4) 
  SLBSFIG
 #e <- c(12,  12.5, 13, 13.5)
@@ -1560,15 +1561,15 @@ e <- c(12, 12.5, 13, 13.5)
 DLBSFIG <-  ggplot(pgridL, aes(x = Lon, y = SSTgradient_15day, fill = value)) +
   geom_tile( show.legend = TRUE) +
 #geom_contour(aes(z = value), color = "green") + 
-  #scale_fill_gradient("BuPu")
+  scale_fill_gradient(low = "powderblue", high = "midnightblue", expression(paste("DLBS [m ", s^-1, "]"))) +
    #scale_fill_brewer(palette = "BuPu") +
-  scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
+  #scale_fill_viridis_c(option = "D", direction = 1, limits = c(0,45)) +
   theme_bw() +
   theme(text = element_text(size=12), legend.position="bottom", legend.key.width = unit(1, "cm"), 
         legend.background = element_rect(size=0.5)) +
   ggtitle("a") +
   xlab(expression(paste("Longitude"))) + 
-  ylab(expression(paste("15-day average SST gradient"))) +
+  ylab(expression(paste("15-day average SST difference"))) +
   labs(fill = expression(paste("DLBS [m ", s^-1, "]"))) + geom_point(data = test, size = 4) 
 
 DLBSFIG
